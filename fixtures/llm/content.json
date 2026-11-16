@@ -1,0 +1,34 @@
+{
+  "hero": {
+    "headline": "Placeholder headline",
+    "subhead": "Placeholder subhead",
+    "button_label": "Join waitlist"
+  },
+  "problem": [
+    "Placeholder pain point 1",
+    "Placeholder pain point 2",
+    "Placeholder pain point 3"
+  ],
+  "offer": [
+    {"title": "Placeholder benefit", "body": "Placeholder benefit body"},
+    {"title": "Placeholder benefit", "body": "Placeholder benefit body"},
+    {"title": "Placeholder benefit", "body": "Placeholder benefit body"}
+  ],
+  "how_it_works": [
+    {"title": "Placeholder step", "body": "Placeholder step body"},
+    {"title": "Placeholder step", "body": "Placeholder step body"},
+    {"title": "Placeholder step", "body": "Placeholder step body"}
+  ],
+  "proof": {
+    "founder_story": "Placeholder founder story",
+    "process": "Placeholder process",
+    "guarantees": "Placeholder guarantee"
+  },
+  "pricing": [],
+  "faq": [],
+  "cta": {
+    "headline": "Placeholder CTA",
+    "button_label": "Join waitlist",
+    "form_fields": ["email", "name"]
+  }
+}

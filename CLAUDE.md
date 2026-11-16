@@ -5,7 +5,7 @@ Web app for the Claude x GoDaddy hackathon (submission due Nov 20, 2026). A foun
 Requirements live in `docs/SRS.md`. Do not read it whole. Grep for the ID you need, for example `grep -n "FR-FIN-3" docs/SRS.md`, and cite requirement IDs in plans and commits.
 
 ## Stack
-FastAPI (Python 3.12), Postgres 16, Next.js (TypeScript), Docker Compose, Caddy.
+FastAPI (Python 3.13), Postgres 16, Next.js (TypeScript), Docker Compose, Caddy.
 LLMs: Claude for pre-mortem, assumption extraction, site content and rewrites. Gemini for persona evaluations. Both go through `backend/app/llm/`.
 
 ## Commands (keep this list current)

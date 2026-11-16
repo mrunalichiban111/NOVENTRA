@@ -1,0 +1,35 @@
+[
+  {
+    "id": "persona-001",
+    "name": "Priya",
+    "segment": "Independent retailer",
+    "budget": "INR 5,000/month",
+    "urgency": "High",
+    "skepticism": "Medium",
+    "tech_comfort": "High",
+    "hidden_objection": "Worries setup will take time",
+    "constraints": "Small team"
+  },
+  {
+    "id": "persona-002",
+    "name": "Arjun",
+    "segment": "Early-stage founder",
+    "budget": "INR 10,000/month",
+    "urgency": "Medium",
+    "skepticism": "High",
+    "tech_comfort": "High",
+    "hidden_objection": "Needs proof of measurable ROI",
+    "constraints": "Limited runway"
+  },
+  {
+    "id": "persona-003",
+    "name": "Meera",
+    "segment": "Solo business owner",
+    "budget": "INR 2,500/month",
+    "urgency": "Medium",
+    "skepticism": "Low",
+    "tech_comfort": "Medium",
+    "hidden_objection": "Prefers human support",
+    "constraints": "Limited time"
+  }
+]

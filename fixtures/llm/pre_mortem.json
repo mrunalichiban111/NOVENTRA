@@ -1,0 +1,28 @@
+{
+  "target_customer": "Placeholder target customer",
+  "competitors": [
+    "Placeholder competitor 1",
+    "Placeholder competitor 2",
+    "Placeholder competitor 3"
+  ],
+  "failure_reasons": [
+    "Placeholder failure reason 1",
+    "Placeholder failure reason 2",
+    "Placeholder failure reason 3"
+  ],
+  "compliance_flags": [
+    {
+      "category": "Placeholder category",
+      "note": "Verify with official sources; this is not legal advice.",
+      "verify": true
+    }
+  ],
+  "risk_severities": {
+    "market_saturation": {"severity": 1, "justification": "Placeholder"},
+    "operational_complexity": {"severity": 1, "justification": "Placeholder"},
+    "compliance": {"severity": 1, "justification": "Placeholder"},
+    "capital_need": {"severity": 1, "justification": "Placeholder"},
+    "founder_load": {"severity": 1, "justification": "Placeholder"}
+  },
+  "suggested_pivots": ["Placeholder pivot"]
+}

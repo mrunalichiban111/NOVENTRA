@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-noventra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-noventra}
+      POSTGRES_DB: ${POSTGRES_DB:-noventra}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: noventra-backend
+    build:
+      context: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-noventra}:${POSTGRES_PASSWORD:-noventra}@postgres:5432/${POSTGRES_DB:-noventra}
+      APP_ENV: ${APP_ENV:-development}
+      MOCK_LLM: ${MOCK_LLM:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    image: noventra-backend
+    build:
+      context: ./backend
+    command: python -m app.worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-noventra}:${POSTGRES_PASSWORD:-noventra}@postgres:5432/${POSTGRES_DB:-noventra}
+      APP_ENV: ${APP_ENV:-development}
+      MOCK_LLM: ${MOCK_LLM:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - sites:/srv/sites
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      api:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - sites:/srv/sites:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  sites:
