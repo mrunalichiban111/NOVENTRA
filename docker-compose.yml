@@ -2,9 +2,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-noventra}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-noventra}
-      POSTGRES_DB: ${POSTGRES_DB:-noventra}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -19,8 +19,8 @@ services:
       context: ./backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-noventra}:${POSTGRES_PASSWORD:-noventra}@postgres:5432/${POSTGRES_DB:-noventra}
-      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      APP_ENV: ${APP_ENV:-production}
       MOCK_LLM: ${MOCK_LLM:-true}
     depends_on:
       postgres:
@@ -37,8 +37,8 @@ services:
       context: ./backend
     command: python -m app.worker
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-noventra}:${POSTGRES_PASSWORD:-noventra}@postgres:5432/${POSTGRES_DB:-noventra}
-      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      APP_ENV: ${APP_ENV:-production}
       MOCK_LLM: ${MOCK_LLM:-true}
     depends_on:
       postgres:
