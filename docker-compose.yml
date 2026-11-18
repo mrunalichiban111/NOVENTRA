@@ -67,6 +67,8 @@ services:
     volumes:
       - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
       - sites:/srv/sites:ro
+      - caddy-data:/data
+      - caddy-config:/config
     depends_on:
       api:
         condition: service_healthy
@@ -76,3 +78,5 @@ services:
 volumes:
   postgres-data:
   sites:
+  caddy-data:
+  caddy-config:

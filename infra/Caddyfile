@@ -1,4 +1,4 @@
-:80 {
+noventras.biz, www.noventras.biz {
     handle /api/* {
         reverse_proxy api:8000
     }
@@ -6,10 +6,4 @@
     handle {
         reverse_proxy frontend:3000
     }
-
-    # Future generated-sites setup:
-    # *.example.invalid {
-    #     root * /srv/sites/{host}/current
-    #     file_server
-    # }
 }
