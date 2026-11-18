@@ -12,6 +12,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   api:
     image: noventra-backend
@@ -22,6 +23,7 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       APP_ENV: ${APP_ENV:-production}
       MOCK_LLM: ${MOCK_LLM:-true}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,6 +32,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   worker:
     image: noventra-backend
@@ -40,11 +43,13 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       APP_ENV: ${APP_ENV:-production}
       MOCK_LLM: ${MOCK_LLM:-true}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - sites:/srv/sites
+    restart: unless-stopped
 
   frontend:
     build:
@@ -52,6 +57,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    restart: unless-stopped
 
   caddy:
     image: caddy:2-alpine
@@ -66,7 +72,7 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
-
+    restart: unless-stopped
 volumes:
   postgres-data:
   sites:
