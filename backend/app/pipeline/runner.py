@@ -54,7 +54,7 @@ def run_business(
     run_id = uuid.uuid4().hex[:12]
     token = current_run_id.set(run_id)
     actor = Actor.worker(worker_id)
-    prefix = f"business_id={business_id} run_id={run_id}"
+    prefix = f"business_id={business_id}"
     last: BusinessStatus | None = None
     try:
         while True:

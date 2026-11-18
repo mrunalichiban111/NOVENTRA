@@ -12,7 +12,8 @@ LLMs: Claude for pre-mortem, assumption extraction, site content and rewrites. G
 - Database only: `docker compose up -d postgres`
 - API with reload: `cd backend && uvicorn app.main:app --reload`
 - Worker: `cd backend && python -m app.worker`
-- Tests: `cd backend && pytest -q`
+- Migrate (explicit, never automatic): `cd backend && alembic upgrade head`; deployed: `docker compose run --rm api alembic upgrade head`
+- Tests (need Postgres, db name ending `_test`): `cd backend && TEST_DATABASE_URL=... pytest -q`
 - Frontend: `cd frontend && npm run dev`
 - Full stack: `docker compose up --build`
 - Frontend lint: `cd frontend && npm run lint`
