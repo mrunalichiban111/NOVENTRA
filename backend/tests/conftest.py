@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
@@ -75,3 +76,21 @@ def session_factory(engine: Engine) -> sessionmaker[Session]:
 def session(session_factory: sessionmaker[Session]) -> Iterator[Session]:
     with session_factory() as s:
         yield s
+
+
+@pytest.fixture
+def client(session_factory: sessionmaker[Session]) -> Iterator[TestClient]:
+
+    from app.api.ratelimit import limiter
+    from app.database import get_session
+    from app.main import app
+
+    def override() -> Iterator[Session]:
+        with session_factory() as s:
+            yield s
+
+    app.dependency_overrides[get_session] = override
+    limiter.reset()
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()

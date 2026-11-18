@@ -12,3 +12,6 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "")
 WORKER_POLL_SECONDS = float(os.environ.get("WORKER_POLL_SECONDS", "2"))
 WORKER_CLAIM_TTL_SECONDS = int(os.environ.get("WORKER_CLAIM_TTL_SECONDS", "60"))
 MAX_STAGE_ATTEMPTS = int(os.environ.get("MAX_STAGE_ATTEMPTS", "3"))
+
+# Public write endpoints: max requests per client IP per minute.
+RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", "20"))
