@@ -1,14 +1,17 @@
 """Persistence helpers for businesses. No transition rules live here (see status.py)."""
 
+import logging
 import uuid
 from datetime import timedelta
 from decimal import Decimal
 
 from sqlalchemy import func, select, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.models import AuditLog, Business, BusinessStatus
 from app.pipeline.status import TERMINAL, Actor, record_creation
+
+logger = logging.getLogger(__name__)
 
 
 def create_business(
@@ -102,3 +105,14 @@ def release_lease(session: Session, business_id: uuid.UUID, worker_id: str) -> N
         .values(locked_by=None, locked_until=None)
     )
     session.commit()
+
+
+def release_lease_quietly(
+    session_factory: sessionmaker[Session], business_id: uuid.UUID, worker_id: str
+) -> None:
+    """Best-effort release in a fresh session; an expiring lease covers any failure here."""
+    try:
+        with session_factory() as session:
+            release_lease(session, business_id, worker_id)
+    except Exception:
+        logger.warning("business_id=%s could not release lease", business_id, exc_info=True)
