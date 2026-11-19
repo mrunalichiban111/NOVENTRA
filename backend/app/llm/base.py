@@ -103,6 +103,9 @@ class LLMRequest:
     # Concise validation feedback for a repair attempt. Appended to the user message; the
     # model's earlier invalid output is deliberately not echoed back.
     repair_feedback: str | None = None
+    # MockProvider only: a controlled scenario id (see llm/scenarios.py) selecting a fixture
+    # subdirectory. Real providers never read this field.
+    fixture_scenario: str | None = None
 
 
 @dataclass(frozen=True)

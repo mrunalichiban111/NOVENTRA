@@ -1,0 +1,46 @@
+{
+  "assumptions": [
+    {
+      "key": "unit_price",
+      "low": 20,
+      "base": 40,
+      "high": 80,
+      "rationale": "Commission earned per order in INR, assuming a lower rate than incumbents."
+    },
+    {
+      "key": "variable_cost_per_unit",
+      "low": 15,
+      "base": 25,
+      "high": 40,
+      "rationale": "Payment and support cost per order in INR."
+    },
+    {
+      "key": "fixed_monthly_cost",
+      "low": 100000,
+      "base": 150000,
+      "high": 300000,
+      "rationale": "Team, hosting and marketing for a general platform in INR."
+    },
+    {
+      "key": "startup_cost",
+      "low": 800000,
+      "base": 1500000,
+      "high": 3000000,
+      "rationale": "Platform build and logistics set-up in INR."
+    },
+    {
+      "key": "monthly_visitors",
+      "low": 200,
+      "base": 800,
+      "high": 3000,
+      "rationale": "Early visitors per month without an established brand."
+    },
+    {
+      "key": "visitor_to_order_conversion",
+      "low": 0.001,
+      "base": 0.005,
+      "high": 0.02,
+      "rationale": "Share of visitors who order from an unknown marketplace."
+    }
+  ]
+}

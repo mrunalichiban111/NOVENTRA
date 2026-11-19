@@ -1,0 +1,46 @@
+{
+  "assumptions": [
+    {
+      "key": "unit_price",
+      "low": 200,
+      "base": 260,
+      "high": 320,
+      "rationale": "Price per meal or snack box in INR; anchored on typical home-food pricing, to be edited."
+    },
+    {
+      "key": "variable_cost_per_unit",
+      "low": 130,
+      "base": 160,
+      "high": 200,
+      "rationale": "Ingredients, packaging and delivery per order in INR."
+    },
+    {
+      "key": "fixed_monthly_cost",
+      "low": 8000,
+      "base": 12000,
+      "high": 20000,
+      "rationale": "Utilities, website and licence costs in INR."
+    },
+    {
+      "key": "startup_cost",
+      "low": 25000,
+      "base": 40000,
+      "high": 70000,
+      "rationale": "Kitchen equipment, packaging and registration in INR."
+    },
+    {
+      "key": "monthly_visitors",
+      "low": 800,
+      "base": 1500,
+      "high": 3000,
+      "rationale": "Website visitors per month from local social media and referrals."
+    },
+    {
+      "key": "visitor_to_order_conversion",
+      "low": 0.015,
+      "base": 0.04,
+      "high": 0.07,
+      "rationale": "Share of visitors who place an order; an assumption to be edited."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "good",
+    "label": "Good idea: GST filing help",
+    "idea": "Fixed-price GST and income-tax filing help for freelancers and small online sellers in India, delivered by a partner chartered accountant through a simple web portal. Customers pay a flat yearly plan online and upload documents securely. The founder handles onboarding and support while the accountant partner signs off each filing.",
+    "starting_budget": 300000
+  },
+  {
+    "id": "rethink",
+    "label": "Weak idea: general marketplace",
+    "idea": "A general online marketplace where anyone can buy and sell anything, from electronics to groceries to services. It will compete head-on with Amazon and Flipkart by charging a lower commission and offering the same delivery speed. The founder plans to fund the platform and the logistics network from savings.",
+    "starting_budget": 500000
+  },
+  {
+    "id": "homemade_food",
+    "label": "Borderline: homemade food",
+    "idea": "Homemade tiffin meals and baked snacks sold through weekly pre-orders in one Indian city. The founder cooks from a home kitchen, takes orders on a simple website and delivers through a local courier. Customers choose from a small rotating menu and pay online in advance.",
+    "starting_budget": 100000
+  }
+]

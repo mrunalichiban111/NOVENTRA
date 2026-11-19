@@ -27,6 +27,11 @@ PIPELINE_ORDER: tuple[BusinessStatus, ...] = (
     S.LIVE, S.TESTING, S.IMPROVING, S.DONE,
 )  # fmt: skip
 
+# Stages where the pipeline deliberately pauses (no automatic next stage yet). In M3 the
+# pipeline stops at GATED for every verdict; a later milestone adds the approval/override.
+# The API reports next_stage=None for these, and handlers must not exist for them.
+PAUSE_STAGES: frozenset[BusinessStatus] = frozenset({S.GATED})
+
 TERMINAL: frozenset[BusinessStatus] = frozenset({S.DONE, S.REJECTED})
 RETRYABLE_STAGES: frozenset[BusinessStatus] = frozenset(
     s for s in PIPELINE_ORDER if s not in TERMINAL
@@ -158,6 +163,41 @@ def _audit(
         .returning(AuditLog.id)
     )
     return session.execute(stmt).scalar_one_or_none() is not None
+
+
+def assert_lease(session: Session, business: Business, worker_id: str) -> None:
+    """Raise LeaseLost unless `worker_id` holds a live lease on this (already locked) business."""
+    _check_lease(session, business, worker_id)
+
+
+def lock_business(session: Session, business_id: uuid.UUID) -> Business:
+    """Row-lock a business for the rest of the caller's transaction (public wrapper)."""
+    return _lock(session, business_id)
+
+
+def record_event(
+    session: Session,
+    business: Business,
+    *,
+    actor: Actor,
+    action: str,
+    reason: str | None,
+    version_ref: str | None = None,
+    details: dict | None = None,
+) -> None:
+    """Audit a non-transition event (e.g. an assumption edit). Status is unchanged. No commit."""
+    _audit(
+        session,
+        business,
+        actor=actor,
+        action=action,
+        reason=reason,
+        version_ref=version_ref,
+        from_status=business.status,
+        to_status=business.status,
+        key=f"{business.id}:event:{uuid.uuid4().hex}",
+        details=details,
+    )
 
 
 def record_creation(session: Session, business: Business, actor: Actor) -> None:

@@ -1,0 +1,56 @@
+{
+  "target_customer": "Working professionals and students in one Indian city who want home-style meals without cooking daily.",
+  "competitors": [
+    "Cloud kitchens and food-delivery apps such as Swiggy and Zomato (unverified, from general knowledge)",
+    "Local tiffin services and mess providers (unverified)",
+    "Other home chefs on social media (unverified)"
+  ],
+  "failure_reasons": [
+    "Home-kitchen capacity limits orders, so growth stalls quickly.",
+    "Licensing or hygiene problems can stop sales overnight.",
+    "Delivery cost and delays erode the margin on a low-priced meal."
+  ],
+  "compliance_flags": [
+    {
+      "category": "Food business licensing",
+      "note": "Selling food, even from a home kitchen, usually needs food-safety registration or licence; check requirements for your city. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Labelling and hygiene",
+      "note": "Packaged food and bakery items carry labelling and hygiene rules. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Goods and services tax",
+      "note": "Registration may depend on turnover thresholds. Verify with official sources; this is not legal advice.",
+      "verify": true
+    }
+  ],
+  "risk_severities": {
+    "market_saturation": {
+      "severity": 4,
+      "justification": "Delivery apps, cloud kitchens and local tiffin services are plentiful."
+    },
+    "operational_complexity": {
+      "severity": 3,
+      "justification": "Daily cooking, packing and delivery must be reliable from one kitchen."
+    },
+    "compliance": {
+      "severity": 4,
+      "justification": "Food licensing and hygiene rules apply even to home-based sellers."
+    },
+    "capital_need": {
+      "severity": 2,
+      "justification": "Equipment and packaging are cheap to start."
+    },
+    "founder_load": {
+      "severity": 4,
+      "justification": "The founder cooks, delivers, markets and handles customers alone."
+    }
+  },
+  "suggested_pivots": [
+    "Begin with a small pre-order group to prove repeat demand before buying equipment.",
+    "Focus on one product, such as baked snacks, that travels well and has a better margin."
+  ]
+}

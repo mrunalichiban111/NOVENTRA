@@ -304,6 +304,6 @@ def test_work_once_uses_claim_and_runs_to_completion(session_factory, monkeypatc
     monkeypatch.setattr(worker, "SessionLocal", session_factory)
     worker.stop_event.clear()
     bid = new_business(session_factory)
-    assert worker.work_once("w1") is True
+    assert worker.work_once("w1", stages=default_stages()) is True  # M1 stub pipeline
     assert snapshot(session_factory, bid).status == "DONE"
-    assert worker.work_once("w1") is False  # nothing left to do
+    assert worker.work_once("w1", stages=default_stages()) is False  # nothing left to do

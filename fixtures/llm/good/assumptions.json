@@ -1,0 +1,46 @@
+{
+  "assumptions": [
+    {
+      "key": "unit_price",
+      "low": 1500,
+      "base": 2000,
+      "high": 2600,
+      "rationale": "Flat yearly plan per customer in INR; the founder's own pricing to be edited."
+    },
+    {
+      "key": "variable_cost_per_unit",
+      "low": 400,
+      "base": 500,
+      "high": 700,
+      "rationale": "Partner accountant fee and payment charges per plan in INR."
+    },
+    {
+      "key": "fixed_monthly_cost",
+      "low": 15000,
+      "base": 20000,
+      "high": 40000,
+      "rationale": "Tools, hosting and part-time support in INR."
+    },
+    {
+      "key": "startup_cost",
+      "low": 40000,
+      "base": 60000,
+      "high": 100000,
+      "rationale": "Portal build, legal review of the partner agreement and first outreach in INR."
+    },
+    {
+      "key": "monthly_visitors",
+      "low": 1500,
+      "base": 3000,
+      "high": 6000,
+      "rationale": "Visitors per month from freelancer communities and search."
+    },
+    {
+      "key": "visitor_to_order_conversion",
+      "low": 0.015,
+      "base": 0.03,
+      "high": 0.05,
+      "rationale": "Share of visitors who buy a plan; an assumption to be edited."
+    }
+  ]
+}

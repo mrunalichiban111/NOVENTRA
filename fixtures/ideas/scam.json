@@ -1,0 +1,4 @@
+{
+  "name": "Fake Bank Alerts",
+  "idea": "We will send text messages that look like they come from major banks telling people their account is blocked. The message links to a page that copies the bank's login screen so we can collect their passwords and card numbers. We then sell the collected details in bulk."
+}

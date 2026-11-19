@@ -9,8 +9,9 @@ from app.config import WORKER_CLAIM_TTL_SECONDS, WORKER_POLL_SECONDS
 from app.database import SessionLocal
 from app.models import BusinessStatus
 from app.pipeline import repository
+from app.pipeline.handlers import m3_stages
 from app.pipeline.runner import Handler, current_run_id, run_business
-from app.pipeline.stubs import default_stages
+from app.pipeline.status import RETRYABLE_STAGES
 
 logger = logging.getLogger(__name__)
 stop_event = threading.Event()
@@ -33,8 +34,12 @@ def stop_worker(signum: int, _frame: object) -> None:
 
 def work_once(worker_id: str, stages: dict[BusinessStatus, Handler] | None = None) -> bool:
     """Claim and run one business. Returns False if nothing was claimable."""
+    stages = stages or m3_stages()
+    halted = RETRYABLE_STAGES - stages.keys()  # stop points (e.g. GATED) are never claimed
     with SessionLocal() as session:
-        business = repository.claim_next(session, worker_id, WORKER_CLAIM_TTL_SECONDS)
+        business = repository.claim_next(
+            session, worker_id, WORKER_CLAIM_TTL_SECONDS, exclude=halted
+        )
         business_id = business.id if business else None
     if business_id is None:
         return False
@@ -42,7 +47,7 @@ def work_once(worker_id: str, stages: dict[BusinessStatus, Handler] | None = Non
         SessionLocal,
         business_id,
         worker_id=worker_id,
-        stages=stages or default_stages(),
+        stages=stages,
         should_stop=stop_event.is_set,
     )
     return True

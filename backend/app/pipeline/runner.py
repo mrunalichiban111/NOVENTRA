@@ -27,11 +27,19 @@ logger = logging.getLogger(__name__)
 current_run_id: contextvars.ContextVar[str] = contextvars.ContextVar("run_id", default="-")
 
 
+# The claiming worker's id while a business runs, so a handler can verify it still holds the
+# lease before a mid-stage write. None outside run_business (e.g. direct handler calls in tests).
+current_worker_id: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "worker_id", default=None
+)
+
+
 @dataclass(frozen=True)
 class StageResult:
     next_status: BusinessStatus
     reason: str
     version_ref: str | None = None
+    action: str | None = None  # audit action; defaults to stage.<status>
 
 
 # A handler does the work for the stage the business is *currently in* and says where to go.
@@ -53,6 +61,7 @@ def run_business(
     """
     run_id = uuid.uuid4().hex[:12]
     token = current_run_id.set(run_id)
+    worker_token = current_worker_id.set(worker_id)
     actor = Actor.worker(worker_id)
     prefix = f"business_id={business_id}"
     last: BusinessStatus | None = None
@@ -73,14 +82,19 @@ def run_business(
                     logger.warning("%s lease lost before %s; abandoning", prefix, current)
                     return last
 
+                handler = stages.get(current)
+                if handler is None:  # a deliberate stop point (e.g. GATED before M4)
+                    logger.info("%s no handler for %s; halting", prefix, current)
+                    return last
+
                 try:
-                    result = stages[current](session, business)
+                    result = handler(session, business)
                     status.transition(
                         session,
                         business_id,
                         result.next_status,
                         actor=actor,
-                        action=f"stage.{current.value.lower()}",
+                        action=result.action or f"stage.{current.value.lower()}",
                         reason=result.reason,
                         version_ref=result.version_ref,
                         expected_from=current,
@@ -100,6 +114,7 @@ def run_business(
     finally:
         repository.release_lease_quietly(session_factory, business_id, worker_id)
         current_run_id.reset(token)
+        current_worker_id.reset(worker_token)
 
 
 def _record_failure(

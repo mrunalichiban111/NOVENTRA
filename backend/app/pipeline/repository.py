@@ -2,6 +2,7 @@
 
 import logging
 import uuid
+from collections.abc import Iterable
 from datetime import timedelta
 from decimal import Decimal
 
@@ -49,14 +50,20 @@ def list_audit(session: Session, business_id: uuid.UUID) -> list[AuditLog]:
     )
 
 
-def claim_next(session: Session, worker_id: str, ttl_seconds: int) -> Business | None:
+def claim_next(
+    session: Session,
+    worker_id: str,
+    ttl_seconds: int,
+    exclude: Iterable[BusinessStatus] = (),
+) -> Business | None:
     """Atomically lease one runnable business, or None.
 
     Runnable = non-terminal, not FAILED, and unleased (or lease expired). FOR UPDATE
     SKIP LOCKED means concurrent workers never pick the same row; the lease means a
-    crashed worker's business becomes claimable again once it expires. Commits.
+    crashed worker's business becomes claimable again once it expires. `exclude` lists
+    statuses with no handler (deliberate stop points) so they are never claimed. Commits.
     """
-    skip = [BusinessStatus.FAILED.value, *(s.value for s in TERMINAL)]
+    skip = [BusinessStatus.FAILED.value, *(s.value for s in TERMINAL), *(s.value for s in exclude)]
     candidate = (
         select(Business.id)
         .where(

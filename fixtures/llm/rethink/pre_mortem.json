@@ -1,0 +1,56 @@
+{
+  "target_customer": "Every online shopper in India, with no specific segment identified.",
+  "competitors": [
+    "Amazon India (unverified, from general knowledge)",
+    "Flipkart (unverified, from general knowledge)",
+    "Meesho and other established marketplaces (unverified)"
+  ],
+  "failure_reasons": [
+    "Established marketplaces have scale, logistics and brand that a new entrant cannot match on commission alone.",
+    "Both buyers and sellers must be won at the same time, and neither has a reason to join an empty marketplace.",
+    "Matching delivery speed requires a logistics network that costs far more than the starting budget."
+  ],
+  "compliance_flags": [
+    {
+      "category": "E-commerce rules",
+      "note": "Marketplace operators face consumer-protection and e-commerce rules for sellers, returns and grievance handling. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Payments",
+      "note": "Holding seller payouts can trigger payment-aggregator rules. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Goods and services tax",
+      "note": "Marketplaces have specific GST collection and registration duties. Verify with official sources; this is not legal advice.",
+      "verify": true
+    }
+  ],
+  "risk_severities": {
+    "market_saturation": {
+      "severity": 5,
+      "justification": "Dominant, well-funded marketplaces already serve the same buyers and sellers."
+    },
+    "operational_complexity": {
+      "severity": 5,
+      "justification": "Logistics, returns, seller onboarding and disputes must all work from day one."
+    },
+    "compliance": {
+      "severity": 4,
+      "justification": "Marketplace, payments and tax obligations are heavy."
+    },
+    "capital_need": {
+      "severity": 5,
+      "justification": "Matching delivery speed needs far more capital than savings."
+    },
+    "founder_load": {
+      "severity": 4,
+      "justification": "One founder cannot run supply, demand, logistics and support."
+    }
+  },
+  "suggested_pivots": [
+    "Pick one narrow category and city and serve it better than a general marketplace.",
+    "Build a seller tool for existing marketplaces instead of a competing marketplace."
+  ]
+}

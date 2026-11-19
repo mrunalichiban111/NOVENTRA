@@ -1,0 +1,56 @@
+{
+  "target_customer": "Freelancers and small online sellers in Indian metro and tier-2 cities who file GST or income tax themselves and worry about mistakes.",
+  "competitors": [
+    "Established CA firms and tax-filing portals such as ClearTax (unverified, from general knowledge)",
+    "Individual local chartered accountants charging per filing (unverified)",
+    "Doing it yourself on the government portals"
+  ],
+  "failure_reasons": [
+    "Customers stay with the accountant they already know and trust.",
+    "Filing season is short, so a slow start can leave months of fixed cost with no revenue.",
+    "One filing error damages trust and referrals quickly."
+  ],
+  "compliance_flags": [
+    {
+      "category": "Professional services regulation",
+      "note": "Tax filing advice may need to be signed off by a qualified chartered accountant; the partner arrangement should be checked. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Data protection",
+      "note": "Storing identity and financial documents falls under India's data protection rules. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Goods and services tax",
+      "note": "The service itself has GST registration and invoicing implications. Verify with official sources; this is not legal advice.",
+      "verify": true
+    }
+  ],
+  "risk_severities": {
+    "market_saturation": {
+      "severity": 3,
+      "justification": "Many CAs and portals exist, but freelancers are under-served by flat-fee plans."
+    },
+    "operational_complexity": {
+      "severity": 2,
+      "justification": "A partner accountant does the filings; the founder runs onboarding and support."
+    },
+    "compliance": {
+      "severity": 3,
+      "justification": "Professional-services and data-handling rules need checking but are manageable with a partner."
+    },
+    "capital_need": {
+      "severity": 2,
+      "justification": "Software is simple and the partner is paid per filing."
+    },
+    "founder_load": {
+      "severity": 3,
+      "justification": "Sales and support fall on one founder during filing season."
+    }
+  },
+  "suggested_pivots": [
+    "Start with GST filing for online sellers only, where demand is clearest.",
+    "Offer a free filing-readiness checklist to collect leads before selling plans."
+  ]
+}

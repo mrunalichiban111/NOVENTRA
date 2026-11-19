@@ -6,6 +6,7 @@ from pathlib import Path
 from app import config
 from app.llm.base import ConfigError, LLMRequest, LLMResponse
 from app.llm.routing import get_task
+from app.llm.scenarios import check_scenario_id
 
 
 class MockProvider:
@@ -15,7 +16,11 @@ class MockProvider:
         self._dir = Path(fixtures_dir if fixtures_dir is not None else config.FIXTURES_DIR)
 
     def complete(self, request: LLMRequest) -> LLMResponse:
-        path = self._dir / "llm" / get_task(request.task).fixture
+        base = self._dir / "llm"
+        if request.fixture_scenario is not None:
+            # Validated against a closed id format; never derived from user text.
+            base = base / check_scenario_id(request.fixture_scenario)
+        path = base / get_task(request.task).fixture
         try:
             raw = path.read_text(encoding="utf-8")
             data = json.loads(raw)

@@ -185,6 +185,7 @@ def run_structured[T: BaseModel](
     provider: LLMProvider | None = None,
     guard: CallGuard | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    fixture_scenario: str | None = None,
 ) -> StructuredResult[T]:
     """Run `task` and return a validated `schema` instance.
 
@@ -192,6 +193,8 @@ def run_structured[T: BaseModel](
     delimited data block. Raises StructuredOutputError if validation still fails after
     2 repair retries, or the provider's typed error (TransportError, RefusalError, ...).
     `business_id`/`run_id` are carried for the guard and usage records.
+    `fixture_scenario` is a controlled id honoured by the mock provider only; for real
+    calls it is dropped here so it can never influence a request.
     """
     spec = get_task(task)
     mock = is_mock()
@@ -231,6 +234,7 @@ def run_structured[T: BaseModel](
         tool_name=tool_name,
         tool_description=f"Submit the final structured result for the {task} task.",
         tool_schema=transform_schema(schema),
+        fixture_scenario=fixture_scenario if mock else None,
     )
 
     attempts: list[AttemptRecord] = []

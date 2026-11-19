@@ -5,6 +5,7 @@ RUN npm ci
 
 FROM node:22-alpine AS builder
 WORKDIR /app
+ENV API_ORIGIN=http://api:8000
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

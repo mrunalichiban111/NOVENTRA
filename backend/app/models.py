@@ -90,6 +90,9 @@ class Business(Base):
     target_customer: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="INTAKE")
     domain: Mapped[str | None] = mapped_column(String(255), unique=True)
+    # M3: validated pre-mortem output plus Python-added labels; safety rejection reason.
+    premortem_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
 
     # Pipeline bookkeeping: retry information and the worker claim lease.
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
