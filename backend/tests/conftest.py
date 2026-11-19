@@ -4,6 +4,7 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
+import httpx
 import pytest
 from alembic import command
 from alembic.config import Config
@@ -94,3 +95,29 @@ def client(session_factory: sessionmaker[Session]) -> Iterator[TestClient]:
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def network_attempts(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[str]]:
+    """No test may reach the real network (so none can call the Anthropic API).
+
+    Real traffic (httpx and the SDK's httpx2) goes through HTTPTransport; it is replaced by a stub that records the
+    host and raises. Any recorded attempt fails the test at teardown. A test that deliberately
+    provokes an attempt must `.clear()` the list itself. (Starlette's TestClient and psycopg do
+    not use this transport, so M1 tests are unaffected.)
+    """
+    attempts: list[str] = []
+
+    def blocked(self: object, request: object) -> object:
+        attempts.append(request.url.host)  # type: ignore[attr-defined]
+        raise RuntimeError("real network access is blocked in tests")
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
+    try:  # the Anthropic SDK 2.x uses its own `httpx2`; block it as well
+        import httpx2
+
+        monkeypatch.setattr(httpx2.HTTPTransport, "handle_request", blocked)
+    except ImportError:
+        pass
+    yield attempts
+    assert not attempts, f"test attempted real network access to: {attempts}"

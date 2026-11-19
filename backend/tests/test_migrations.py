@@ -7,7 +7,7 @@ from tests.conftest import alembic_config
 TABLES = {
     "businesses", "assumptions", "scorecards", "domain_candidates", "site_versions",
     "persona_panels", "persona_runs", "improvement_attempts", "approvals", "audit_log",
-    "waitlist_signups",
+    "waitlist_signups", "llm_usage", "llm_budget_reservations",
 }  # fmt: skip
 
 

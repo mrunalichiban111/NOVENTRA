@@ -18,6 +18,8 @@ LLMs: Claude for pre-mortem, assumption extraction, site content and rewrites. G
 - Full stack: `docker compose up --build`
 - Frontend lint: `cd frontend && npm run lint`
 - Backend lint and format check: `cd backend && ruff check . && ruff format --check .`
+- Real-API smoke test (manual only, needs key, see `docs/llm.md`): `backend/.venv/bin/python scripts/llm_smoke_test.py --tier small`
+- Mock mode reads `fixtures/llm/` (`FIXTURES_DIR`; Docker mounts `./fixtures` read-only). Real LLM calls need a `run_id`.
 
 ## Layout
 - `backend/app/api` routes, all served under `/api`

@@ -1,0 +1,46 @@
+{
+  "assumptions": [
+    {
+      "key": "unit_price",
+      "low": 800,
+      "base": 1500,
+      "high": 2500,
+      "rationale": "Monthly subscription per shop in INR; anchored on the founder's described subscription model, not on market data."
+    },
+    {
+      "key": "variable_cost_per_unit",
+      "low": 150,
+      "base": 300,
+      "high": 500,
+      "rationale": "Per-shop monthly cost to serve (support, payment fees, routing compute) in INR."
+    },
+    {
+      "key": "fixed_monthly_cost",
+      "low": 15000,
+      "base": 30000,
+      "high": 60000,
+      "rationale": "Tools, hosting and part-time operations help for a one-city launch in INR."
+    },
+    {
+      "key": "startup_cost",
+      "low": 50000,
+      "base": 150000,
+      "high": 400000,
+      "rationale": "Build, legal checks and a first small marketing push in INR."
+    },
+    {
+      "key": "monthly_visitors",
+      "low": 300,
+      "base": 1200,
+      "high": 4000,
+      "rationale": "Landing-page visitors per month from outreach and local referrals."
+    },
+    {
+      "key": "visitor_to_order_conversion",
+      "low": 0.005,
+      "base": 0.02,
+      "high": 0.05,
+      "rationale": "Share of visitors who sign up; a plain assumption for a niche B2B offer, to be edited."
+    }
+  ]
+}

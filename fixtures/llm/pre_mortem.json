@@ -1,28 +1,57 @@
 {
-  "target_customer": "Placeholder target customer",
+  "target_customer": "Independent retailers in Indian metro neighbourhoods (grocery, pharmacy, stationery, gifts) who offer same-day delivery today using their own staff or ad-hoc couriers.",
   "competitors": [
-    "Placeholder competitor 1",
-    "Placeholder competitor 2",
-    "Placeholder competitor 3"
+    "Hyperlocal courier apps such as Dunzo-style on-demand riders (unverified, from general knowledge)",
+    "Aggregator platforms with their own delivery fleets such as Swiggy Instamart or Zepto (unverified)",
+    "Shops continuing to deliver with their own staff or a regular local rider"
   ],
   "failure_reasons": [
-    "Placeholder failure reason 1",
-    "Placeholder failure reason 2",
-    "Placeholder failure reason 3"
+    "Route pooling only saves money when several shops in the same neighbourhood join; early on there is too little density to beat a shop's own rider.",
+    "Shops are used to informal arrangements and may not pay a monthly subscription for something they already do for free with existing staff.",
+    "Courier capacity is the real cost. If rider availability or quality is inconsistent, shops will lose customers and blame the service."
   ],
   "compliance_flags": [
     {
-      "category": "Placeholder category",
-      "note": "Verify with official sources; this is not legal advice.",
+      "category": "Gig-worker and labour rules",
+      "note": "Engaging riders may bring state-level labour and social-security obligations. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Data protection",
+      "note": "Handling customer addresses and phone numbers falls under India's data protection rules. Verify with official sources; this is not legal advice.",
+      "verify": true
+    },
+    {
+      "category": "Goods and services tax",
+      "note": "A subscription service has GST registration and invoicing implications. Verify with official sources; this is not legal advice.",
       "verify": true
     }
   ],
   "risk_severities": {
-    "market_saturation": {"severity": 1, "justification": "Placeholder"},
-    "operational_complexity": {"severity": 1, "justification": "Placeholder"},
-    "compliance": {"severity": 1, "justification": "Placeholder"},
-    "capital_need": {"severity": 1, "justification": "Placeholder"},
-    "founder_load": {"severity": 1, "justification": "Placeholder"}
+    "market_saturation": {
+      "severity": 4,
+      "justification": "Well-funded delivery aggregators and courier apps already serve the same shops."
+    },
+    "operational_complexity": {
+      "severity": 4,
+      "justification": "Routing, rider supply and handoffs across several shops must work every day."
+    },
+    "compliance": {
+      "severity": 3,
+      "justification": "Rider engagement and customer data handling need checking, but no licence is obviously blocking."
+    },
+    "capital_need": {
+      "severity": 3,
+      "justification": "Software is cheap; guaranteeing courier capacity before shops sign up is not."
+    },
+    "founder_load": {
+      "severity": 4,
+      "justification": "A single founder would carry sales, operations and rider management at once."
+    }
   },
-  "suggested_pivots": ["Placeholder pivot"]
+  "suggested_pivots": [
+    "Start with one dense neighbourhood and 10 to 15 shops, with riders paid per delivery and no fixed capacity.",
+    "Sell route planning software only, and let shops keep using their own riders.",
+    "Focus on one category, such as pharmacies, where same-day delivery matters most."
+  ]
 }

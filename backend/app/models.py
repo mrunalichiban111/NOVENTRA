@@ -303,3 +303,57 @@ class WaitlistSignup(Base):
     business_id: Mapped[uuid.UUID] = _business_fk()
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     created_at: Mapped[datetime] = _created_at()
+
+
+class LlmUsage(Base):
+    """One row per real model call whose usage is known (M2). Costs are ESTIMATES from the
+    price registry in app/llm/pricing.py, not billing data. Written in its own transaction
+    so a later pipeline-stage failure cannot erase it."""
+
+    __tablename__ = "llm_usage"
+    __table_args__ = (
+        CheckConstraint(_in("status", ["success", "failure"]), name="ck_llm_usage_status"),
+        Index("ix_llm_usage_run_id", "run_id"),
+        Index("ix_llm_usage_created_at", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    business_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("businesses.id", ondelete="SET NULL")
+    )
+    run_id: Mapped[str | None] = mapped_column(String(64))
+    task: Mapped[str] = mapped_column(String(64), nullable=False)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    model: Mapped[str] = mapped_column(String(80), nullable=False)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    cache_read_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    cache_write_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    estimated_cost_usd: Mapped[Decimal] = mapped_column(
+        Numeric(12, 6), nullable=False, server_default="0"
+    )
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    status: Mapped[str] = mapped_column(String(8), nullable=False)
+    error_category: Mapped[str | None] = mapped_column(String(32))
+    created_at: Mapped[datetime] = _created_at()
+
+
+class LlmBudgetReservation(Base):
+    """Worst-case spend held for an in-flight call. Active, unexpired rows count toward the
+    per-run cap; expiry is the only crash recovery."""
+
+    __tablename__ = "llm_budget_reservations"
+    __table_args__ = (
+        CheckConstraint(
+            _in("status", ["active", "settled", "released"]), name="ck_llm_reservations_status"
+        ),
+        Index("ix_llm_reservations_run_status", "run_id", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    run_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    amount_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6), nullable=False)
+    status: Mapped[str] = mapped_column(String(8), nullable=False, server_default="active")
+    created_at: Mapped[datetime] = _created_at()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

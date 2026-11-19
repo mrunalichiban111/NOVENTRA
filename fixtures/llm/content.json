@@ -1,34 +1,96 @@
 {
   "hero": {
-    "headline": "Placeholder headline",
-    "subhead": "Placeholder subhead",
-    "button_label": "Join waitlist"
+    "headline": "Same-day delivery for your shop, at a shared cost",
+    "subhead": "LocalLoop pools neighbourhood delivery routes so independent shops stop paying for half-empty trips.",
+    "button_label": "Join the waitlist"
   },
   "problem": [
-    "Placeholder pain point 1",
-    "Placeholder pain point 2",
-    "Placeholder pain point 3"
+    "Small same-day deliveries cost more than the margin on the order.",
+    "Every shop runs its own half-empty route through the same streets.",
+    "It is hard to promise customers a delivery time you can keep."
   ],
   "offer": [
-    {"title": "Placeholder benefit", "body": "Placeholder benefit body"},
-    {"title": "Placeholder benefit", "body": "Placeholder benefit body"},
-    {"title": "Placeholder benefit", "body": "Placeholder benefit body"}
+    {
+      "title": "Shared routes",
+      "body": "Orders from nearby shops are planned into one route, so each trip carries more."
+    },
+    {
+      "title": "Predictable cost",
+      "body": "A flat monthly subscription instead of a surprise bill for every trip."
+    },
+    {
+      "title": "Simple for staff",
+      "body": "Add an order, hand over the parcel and the route plan does the rest."
+    }
   ],
   "how_it_works": [
-    {"title": "Placeholder step", "body": "Placeholder step body"},
-    {"title": "Placeholder step", "body": "Placeholder step body"},
-    {"title": "Placeholder step", "body": "Placeholder step body"}
+    {
+      "title": "Join your neighbourhood",
+      "body": "Tell us your shop and delivery area. We group nearby shops together."
+    },
+    {
+      "title": "Add orders as they come",
+      "body": "Enter each delivery. We combine them into planned routes."
+    },
+    {
+      "title": "Parcels go out together",
+      "body": "A courier collects from several shops and delivers along one route."
+    }
   ],
   "proof": {
-    "founder_story": "Placeholder founder story",
-    "process": "Placeholder process",
-    "guarantees": "Placeholder guarantee"
+    "founder_story": "LocalLoop is an early-stage idea from a founder who saw independent shops struggle with small same-day deliveries.",
+    "process": "We plan routes from the orders you enter and check early pilots with each shop before widening the service.",
+    "guarantees": "Join the waitlist for free. We will not charge you before launch and you can leave at any time.",
+    "missing_proof": [
+      "No customer testimonials yet",
+      "No pilot results to share yet",
+      "No courier partner names confirmed yet"
+    ]
   },
-  "pricing": [],
-  "faq": [],
+  "pricing": [
+    {
+      "name": "Starter",
+      "price_inr": 999,
+      "bullets": [
+        "Route planning for one shop",
+        "Up to 100 orders a month",
+        "Email support"
+      ]
+    },
+    {
+      "name": "Neighbourhood",
+      "price_inr": 1999,
+      "bullets": [
+        "Shared routes with nearby shops",
+        "Up to 400 orders a month",
+        "Priority email support"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Is LocalLoop live yet?",
+      "answer": "Not yet. This page collects interest so we can decide where to start first."
+    },
+    {
+      "question": "Will I be charged now?",
+      "answer": "No. The waitlist is free and we will tell you the final price before you commit."
+    },
+    {
+      "question": "Which cities will you start in?",
+      "answer": "We will begin where several nearby shops sign up, so your interest helps choose the area."
+    },
+    {
+      "question": "Do I need to change how I take orders?",
+      "answer": "No. You keep your current process and simply enter deliveries into LocalLoop."
+    }
+  ],
   "cta": {
-    "headline": "Placeholder CTA",
-    "button_label": "Join waitlist",
-    "form_fields": ["email", "name"]
+    "headline": "Be among the first shops in your neighbourhood",
+    "button_label": "Join the waitlist",
+    "form_fields": [
+      "email",
+      "name"
+    ]
   }
 }

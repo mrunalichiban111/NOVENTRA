@@ -1,0 +1,196 @@
+{
+  "candidates": [
+    {
+      "name": "Routely",
+      "rationale": "Short and about routes"
+    },
+    {
+      "name": "Neighbourloop",
+      "rationale": "Neighbourhood plus loop"
+    },
+    {
+      "name": "Dropwise",
+      "rationale": "Drop plus wise"
+    },
+    {
+      "name": "Lanecart",
+      "rationale": "Lane plus cart"
+    },
+    {
+      "name": "Hopline",
+      "rationale": "Hop along a line"
+    },
+    {
+      "name": "Streetpool",
+      "rationale": "Pooled street deliveries"
+    },
+    {
+      "name": "Cartwise",
+      "rationale": "Cart plus wise"
+    },
+    {
+      "name": "Mohallo",
+      "rationale": "Nods to the Indian word mohalla"
+    },
+    {
+      "name": "Gullyloop",
+      "rationale": "Gully is a lane; loop is the pooled run"
+    },
+    {
+      "name": "Localpath",
+      "rationale": "Local plus path"
+    },
+    {
+      "name": "Parcelpal",
+      "rationale": "Parcel pal for shops"
+    },
+    {
+      "name": "Nearbyroute",
+      "rationale": "Nearby plus route"
+    },
+    {
+      "name": "Shopstride",
+      "rationale": "Shops that stride along"
+    },
+    {
+      "name": "Loopkart",
+      "rationale": "Loop plus kart"
+    },
+    {
+      "name": "Haatway",
+      "rationale": "Haat is a local market"
+    },
+    {
+      "name": "Bazaarbolt",
+      "rationale": "Bazaar plus bolt for speed"
+    },
+    {
+      "name": "Pinroute",
+      "rationale": "Pin code plus route"
+    },
+    {
+      "name": "Lastmilo",
+      "rationale": "Playful last-mile twist"
+    },
+    {
+      "name": "Doorhop",
+      "rationale": "Door plus hop"
+    },
+    {
+      "name": "Rowdrop",
+      "rationale": "Row of drops"
+    },
+    {
+      "name": "Kiranaly",
+      "rationale": "Kirana store plus suffix"
+    },
+    {
+      "name": "Dukaanly",
+      "rationale": "Dukaan means shop"
+    },
+    {
+      "name": "Swiftlane",
+      "rationale": "Swift plus lane"
+    },
+    {
+      "name": "Poolkart",
+      "rationale": "Pooled kart"
+    },
+    {
+      "name": "Gatherway",
+      "rationale": "Gather plus way"
+    },
+    {
+      "name": "Blocklane",
+      "rationale": "City block plus lane"
+    },
+    {
+      "name": "Quartly",
+      "rationale": "Quarter of a city"
+    },
+    {
+      "name": "Tolly",
+      "rationale": "Short and rhythmic"
+    },
+    {
+      "name": "Neighbo",
+      "rationale": "Neighbour shortened"
+    },
+    {
+      "name": "Cartloop",
+      "rationale": "Cart plus loop"
+    },
+    {
+      "name": "Zonedrop",
+      "rationale": "Zone plus drop"
+    },
+    {
+      "name": "Pathpal",
+      "rationale": "Path plus pal"
+    },
+    {
+      "name": "Streetly",
+      "rationale": "Street plus ly"
+    },
+    {
+      "name": "Routekart",
+      "rationale": "Route plus kart"
+    },
+    {
+      "name": "Dropnest",
+      "rationale": "Drop plus nest"
+    },
+    {
+      "name": "Wardwise",
+      "rationale": "Ward is a city district"
+    },
+    {
+      "name": "Lanely",
+      "rationale": "Lane plus ly"
+    },
+    {
+      "name": "Hubhop",
+      "rationale": "Hub plus hop"
+    },
+    {
+      "name": "Stopsy",
+      "rationale": "Stop plus sy"
+    },
+    {
+      "name": "Dailydrop",
+      "rationale": "Daily plus drop"
+    },
+    {
+      "name": "Marketloop",
+      "rationale": "Market plus loop"
+    },
+    {
+      "name": "Localdash",
+      "rationale": "Local plus dash"
+    },
+    {
+      "name": "Sharedrop",
+      "rationale": "Share plus drop"
+    },
+    {
+      "name": "Cohortly",
+      "rationale": "Cohort plus ly"
+    },
+    {
+      "name": "Roadmate",
+      "rationale": "Road plus mate"
+    },
+    {
+      "name": "Tiffinroute",
+      "rationale": "Tiffin delivery nod"
+    },
+    {
+      "name": "Chowkloop",
+      "rationale": "Chowk is a town square"
+    },
+    {
+      "name": "Galliway",
+      "rationale": "Gali is a lane"
+    }
+  ]
+}

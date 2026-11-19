@@ -1,0 +1,1 @@
+Task: connectivity check. The data block contains the name of a country. Return that country, its capital city, and your confidence (high, medium or low) that the capital is correct. This is only a test of the integration.
