@@ -1,18 +1,22 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { ApiError, submitContact } from "../lib/api";
 import styles from "./ContactForm.module.css";
 
 export default function ContactForm() {
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
+  const submitting = useRef(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setState("loading");
     setError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await submitContact({
         name: String(form.get("name") ?? ""),
@@ -21,7 +25,7 @@ export default function ContactForm() {
         website: String(form.get("website") ?? ""),
       });
       setError("");
-      event.currentTarget.reset();
+      formElement.reset();
       setState("success");
     } catch (caught) {
       const message = caught instanceof ApiError
@@ -29,6 +33,8 @@ export default function ContactForm() {
         : "Could not send your message. Please try again.";
       setError(message);
       setState("error");
+    } finally {
+      submitting.current = false;
     }
   }
 
