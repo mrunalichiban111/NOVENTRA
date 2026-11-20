@@ -3,7 +3,7 @@
 Model ids come only from environment config (CLAUDE_MODEL_STRONG / CLAUDE_MODEL_SMALL).
 There is deliberately no temperature column: the Claude 5.x docs say sampling
 parameters (temperature, top_p, top_k) return a 400 on Sonnet 5.5, so none are sent.
-Add persona and rewrite tasks here in M5/M6.
+Persona tasks added in M5; rewrite tasks come in M6.
 """
 
 from dataclasses import dataclass
@@ -32,6 +32,10 @@ TASKS: dict[str, TaskSpec] = {
         TaskSpec("assumption_extraction", "strong", 2048, 60, "assumptions.json"),
         TaskSpec("business_names", "small", 4096, 60, "business_names.json"),
         TaskSpec("website_content", "strong", 4096, 90, "content.json"),
+        # M5 persona arena: panel on the strong model; evaluations ALWAYS on Claude Haiku
+        # (CLAUDE_MODEL_SMALL, checked at runtime by app.agents.personas.assert_haiku).
+        TaskSpec("persona_panel", "strong", 12000, 120, "persona_panel.json"),
+        TaskSpec("persona_evaluation", "small", 3000, 45, "persona_evaluation.json"),
     )
 }
 

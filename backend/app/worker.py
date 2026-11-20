@@ -8,7 +8,7 @@ import uuid
 from app.config import WORKER_CLAIM_TTL_SECONDS, WORKER_POLL_SECONDS
 from app.database import SessionLocal
 from app.models import BusinessStatus
-from app.pipeline import repository
+from app.pipeline import arena, repository
 from app.pipeline.handlers import pipeline_stages
 from app.pipeline.runner import Handler, current_run_id, run_business
 from app.pipeline.status import RETRYABLE_STAGES
@@ -66,7 +66,8 @@ def main() -> None:
     logger.info("NOVENTRA worker %s started", worker_id)
     while not stop_event.is_set():
         try:
-            did_work = work_once(worker_id)
+            # Pipeline stages first; persona arena jobs (M5) when no business is runnable.
+            did_work = work_once(worker_id) or arena.work_once(SessionLocal, worker_id)
         except Exception:
             logger.exception("Worker loop error; backing off")
             did_work = False

@@ -19,6 +19,7 @@ from app.llm.base import (
     BudgetExceeded,
     InputTooLarge,
     LLMRequest,
+    LLMResponse,
     PricingMissing,
     RefusalError,
     RunIdRequired,
@@ -415,3 +416,90 @@ def test_validation_retry_uses_same_run_id_and_a_fresh_budget_check(session_fact
     with pytest.raises(BudgetExceeded):
         run(session_factory, p2, run_id="run-w", cap=0.0024)
     assert len(p2.requests) == 1
+
+
+# --- [DB] daily cap (M5): rolling 24h across runs, concurrency-safe, no double counting -----
+
+
+def _resp(model: str = HAIKU, out: int = 100) -> LLMResponse:
+    return LLMResponse(model=model, input_tokens=100, output_tokens=out)
+
+
+def test_daily_cap_race_across_runs_admits_only_what_fits(session_factory):
+    r = req()
+    amount = float(worst_case_usd(r))
+    daily = amount * 2.5  # room for exactly two attempts across all runs
+    n = 8
+    barrier = threading.Barrier(n)
+    results: list[str] = []
+    lock = threading.Lock()
+
+    def worker(i: int) -> None:
+        g = guard(session_factory, f"run-daily-{i}", cap=2.0, daily_cap_usd=daily)
+        barrier.wait()
+        try:
+            g.before(r, 1)
+            outcome = "ok"
+        except BudgetExceeded as exc:
+            assert "daily spend cap" in str(exc)
+            outcome = "blocked"
+        with lock:
+            results.append(outcome)
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(n)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sorted(results) == ["blocked"] * (n - 2) + ["ok"] * 2
+
+
+def test_daily_cap_counts_settled_usage_once_and_released_not_at_all(session_factory):
+    r = req()
+    amount = worst_case_usd(r)
+    g = guard(session_factory, "run-d1", cap=2.0, daily_cap_usd=float(amount) * 10)
+    t1 = g.before(r, 1)
+    g.after(t1, r, 1, _resp(), "success", None)  # settled: usage row only
+    t2 = g.before(r, 2)
+    g.after(t2, r, 2, None, "failure", "transport_not_sent")  # released: counts nothing
+    with session_factory() as s:
+        from app.llm.budget import _DAILY_SPEND_SQL
+
+        counted = Decimal(s.execute(_DAILY_SPEND_SQL).scalar_one())
+        active = s.scalars(
+            select(LlmBudgetReservation).where(LlmBudgetReservation.status == "active")
+        ).all()
+    usage_total = sum(u.estimated_cost_usd for u in usage_rows(session_factory))
+    assert active == [] and counted == usage_total  # no reservation counted twice
+    assert len(usage_rows(session_factory)) == 1
+
+
+def test_daily_cap_default_and_override(monkeypatch, session_factory):
+    assert config.DEFAULT_DAILY_CAP_USD == "5.00"
+    r = req()
+    monkeypatch.setattr(config, "DAILY_SPEND_CAP_USD", float(worst_case_usd(r)) / 2)
+    with pytest.raises(BudgetExceeded, match="daily spend cap"):
+        guard(session_factory, "run-d2", cap=2.0).before(r, 1)
+
+
+def test_five_concurrent_calls_one_run_reserve_and_settle_once(session_factory):
+    r = req()
+    n = 5
+    barrier = threading.Barrier(n)
+
+    def worker(i: int) -> None:
+        g = guard(session_factory, "run-five", cap=2.0)
+        barrier.wait()
+        tok = g.before(r, i)
+        g.after(tok, r, i, _resp(), "success", None)
+        g.after(tok, r, i, _resp(), "success", None)  # duplicate settle is a no-op
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(1, n + 1)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    with session_factory() as s:
+        res = s.scalars(select(LlmBudgetReservation)).all()
+    assert len(res) == n and all(x.status == "settled" for x in res)
+    assert len(usage_rows(session_factory)) == n

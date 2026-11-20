@@ -47,6 +47,11 @@ export function websiteMode(b: Business): WebsiteMode {
 
 export type StageKey = "assessment" | "names" | "website" | "personas" | "improve";
 
+// The persona arena tests a live website: a claimed host and a business that reached LIVE.
+export function arenaAvailable(b: Business): boolean {
+  return b.status !== "REJECTED" && !!b.domain && reached(b) >= ORDER.indexOf("LIVE");
+}
+
 export interface StageState {
   key: StageKey;
   label: string;
@@ -82,7 +87,13 @@ export function stageStates(b: Business | null, id: string): StageState[] {
     { key: "assessment", label: "Assessment", href: base, upcoming: false, note: null },
     { key: "names", label: "Naming Studio", href: namesLock ? null : `${base}/names`, upcoming: false, note: namesLock },
     { key: "website", label: "Website Launch", href: websiteLock ? null : `${base}/website`, upcoming: false, note: websiteLock },
-    { key: "personas", label: "Persona Arena", href: null, upcoming: true, note: "Upcoming" },
+    {
+      key: "personas",
+      label: "Persona Arena",
+      href: b && arenaAvailable(b) ? `${base}/personas` : null,
+      upcoming: false,
+      note: !b ? "Loading" : arenaAvailable(b) ? null : "Available once your website is live",
+    },
     { key: "improve", label: "Improvement", href: null, upcoming: true, note: "Upcoming" },
   ];
 }

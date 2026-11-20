@@ -13,6 +13,7 @@ from app.models import (
     Business,
     DomainCandidate,
     ImprovementAttempt,
+    PersonaEvaluation,
     PersonaPanel,
     PersonaRun,
     Scorecard,
@@ -57,13 +58,16 @@ def test_every_entity_can_be_created(session: Session) -> None:
     site = SiteVersion(business_id=b.id, version=1, content_json={"h": "x"}, content_hash="ab")
     session.add_all([panel, site])
     session.flush()
+    evaluation = PersonaEvaluation(business_id=b.id, panel_id=panel.id, site_version_id=site.id)
+    session.add(evaluation)
+    session.flush()
     session.add_all(
         [
             Assumption(business_id=b.id, key="cac", low=1, base=2, high=3, source="llm"),
             Scorecard(business_id=b.id, version=1, stage="pre", verdict="go", details_json={"a": 1}),
             DomainCandidate(business_id=b.id, name="tea", tld=".in", available=True),
             PersonaRun(
-                panel_id=panel.id, site_version_id=site.id, persona_id="p1", run_idx=0,
+                evaluation_id=evaluation.id, panel_id=panel.id, site_version_id=site.id, persona_id="p1", run_idx=0,
                 decision="convert", confidence=0.8,
             ),
             ImprovementAttempt(business_id=b.id, from_version=1, to_version=2, outcome="accepted"),

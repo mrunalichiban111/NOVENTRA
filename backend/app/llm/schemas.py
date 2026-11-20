@@ -220,3 +220,91 @@ OUTPUT_SCHEMAS: dict[str, type[BaseModel]] = {
     "business_names": BusinessNames,
     "website_content": WebsiteContent,
 }
+
+
+# --- Persona arena (M5: FR-AR-1, FR-AR-2, Appendix C) ---------------------------------------
+# Everything here is SIMULATED. Persona ids are assigned in Python (p01..p30), never by the model.
+
+PANEL_SIZE = 30
+BudgetTier = Literal["under_500", "500_2k", "2k_5k", "5k_15k", "over_15k"]
+Fit = Literal["target", "adjacent", "weak", "non_target"]
+ObjectionType = Literal["missing_info", "price", "trust", "fit", "clarity", "other"]
+PageSection = Literal[
+    "header", "hero", "problem", "offer", "how_it_works", "proof", "pricing", "faq", "cta",
+    "footer", "none",
+]  # fmt: skip
+
+
+class Persona(_Out):
+    name: str = Field(min_length=1, max_length=40)
+    segment: str = Field(min_length=1, max_length=60)
+    occupation: str = Field(min_length=1, max_length=60)
+    age: int = Field(ge=18, le=80)
+    budget_tier_inr: BudgetTier
+    fit: Fit
+    urgency: int = Field(ge=1, le=5)
+    skepticism: int = Field(ge=1, le=5)
+    tech_comfort: int = Field(ge=1, le=5)
+    hidden_objection: str = Field(min_length=1, max_length=120)
+    constraints: list[str] = Field(max_length=2)
+
+    @model_validator(mode="after")
+    def _constraint_len(self) -> "Persona":
+        if any(not c or len(c) > 80 for c in self.constraints):
+            raise ValueError("each constraint must be 1-80 characters")
+        return self
+
+
+class PersonaPanelOut(_Out):
+    personas: list[Persona] = Field(min_length=PANEL_SIZE, max_length=PANEL_SIZE)
+
+    @model_validator(mode="after")
+    def _diversity(self) -> "PersonaPanelOut":
+        """Panel diversity rules (validated in code; failures become repair feedback)."""
+        ps = self.personas
+        problems = []
+        names = [p.name.strip().lower() for p in ps]
+        if len(set(names)) != len(names):
+            problems.append("persona names must be unique")
+        if sum(p.skepticism >= 4 for p in ps) < 5:
+            problems.append("at least 5 personas need skepticism 4 or 5")
+        if sum(p.fit in ("weak", "non_target") for p in ps) < 4:
+            problems.append("at least 4 personas must have fit 'weak' or 'non_target'")
+        tiers: dict[str, int] = {}
+        for p in ps:
+            tiers[p.budget_tier_inr] = tiers.get(p.budget_tier_inr, 0) + 1
+        if len(tiers) < 3:
+            problems.append("use at least 3 different budget_tier_inr values")
+        if max(tiers.values()) > 12:
+            problems.append("no single budget_tier_inr may be used by more than 12 personas")
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
+
+
+class PersonaEvaluation(_Out):
+    persona_id: str = Field(min_length=1, max_length=8)
+    decision: Literal["convert", "bounce"]
+    confidence: float = Field(ge=0, le=1)
+    objection_type: ObjectionType
+    top_objection: str = Field(max_length=100)
+    section: PageSection
+    missing_info: list[str] = Field(max_length=2)
+    reason: str = Field(min_length=1, max_length=120)
+
+    @model_validator(mode="after")
+    def _missing_len(self) -> "PersonaEvaluation":
+        if any(not m or len(m) > 60 for m in self.missing_info):
+            raise ValueError("each missing_info item must be 1-60 characters")
+        return self
+
+
+class PersonaEvaluationBatch(_Out):
+    # Up to the panel size so one recorded mock fixture serves every batch; the arena keeps only
+    # the persona ids it asked for (missing ones are retried, extras are dropped).
+    evaluations: list[PersonaEvaluation] = Field(min_length=1, max_length=PANEL_SIZE)
+
+
+OUTPUT_SCHEMAS.update(
+    {"persona_panel": PersonaPanelOut, "persona_evaluation": PersonaEvaluationBatch}
+)

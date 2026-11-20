@@ -123,6 +123,17 @@ comparison). A token in the query string is ignored. Empty bodies.
 | `400` | Zero or several `domain` parameters |
 | `404` | `INTERNAL_TLS_ASK_TOKEN` is empty (endpoint disabled) |
 
+## Persona arena (M5: FR-AR-1..4, 6..8). All output is SIMULATED.
+
+Responses carry `"simulated": true` and a label. POSTs are rate limited. Polling only.
+
+| Route | Notes / codes |
+| --- | --- |
+| `POST /api/businesses/{id}/personas/generate` | 202 queues the one 30-persona panel (worker, strong model); 200 if already ready/in flight. 409 `no_live_version`, 503 `budget_exceeded` |
+| `GET /api/businesses/{id}/personas` | Panel status (`none/pending/generating/ready/failed`) and personas |
+| `POST /api/businesses/{id}/personas/evaluate` `{site_version?}` | 202 queues 9 Claude Haiku calls (3 batches x 10 x 3 repeats, <=5 concurrent). Repeat = no-op; `incomplete` re-queues only missing runs. 409 `personas_not_ready`/`no_live_version`/`evaluation_in_progress`, 422 `invalid_version`, 503 `evaluator_misconfigured`/`budget_exceeded` |
+| `GET /api/businesses/{id}/personas/results?site_version=` | Live cards, ranked objections, `d_score`/`d_se` only when complete (never extrapolated) |
+
 ## Worker
 
 `python -m app.worker` polls for runnable businesses (non-terminal, not FAILED). A claim uses
@@ -135,6 +146,9 @@ another worker resumes from the last committed stage. Each stage commits indepen
 cd backend && alembic upgrade head
 docker compose run --rm api alembic upgrade head      # deployed stack
 ```
+
+0007 (M5/M6) downgrade refuses while persona/improvement data exists. `alembic -x allow_data_loss=true downgrade 0006`
+is DESTRUCTIVE (deletes panels, evaluations, runs and attempts). Never run it on production without approval.
 
 ## Tests
 

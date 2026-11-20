@@ -1,0 +1,452 @@
+{
+  "personas": [
+    {
+      "name": "Aarti",
+      "segment": "Working professional",
+      "occupation": "Software engineer",
+      "age": 19,
+      "budget_tier_inr": "under_500",
+      "fit": "target",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Is the food really homemade and hygienic?",
+      "constraints": [
+        "Office hours 9 to 7"
+      ]
+    },
+    {
+      "name": "Rohan",
+      "segment": "Student in a PG",
+      "occupation": "MBA student",
+      "age": 26,
+      "budget_tier_inr": "5k_15k",
+      "fit": "target",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Price per meal may be too high for daily use",
+      "constraints": [
+        "Tight monthly budget"
+      ]
+    },
+    {
+      "name": "Sneha",
+      "segment": "Young family",
+      "occupation": "Nurse",
+      "age": 33,
+      "budget_tier_inr": "500_2k",
+      "fit": "target",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Not sure they deliver to my area",
+      "constraints": [
+        "Lives in Hinjewadi"
+      ]
+    },
+    {
+      "name": "Vikram",
+      "segment": "Senior living alone",
+      "occupation": "Retired teacher",
+      "age": 40,
+      "budget_tier_inr": "over_15k",
+      "fit": "target",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Worried the menu will get repetitive",
+      "constraints": [
+        "Vegetarian only",
+        "No onion or garlic"
+      ]
+    },
+    {
+      "name": "Meera",
+      "segment": "Fitness-focused",
+      "occupation": "Gym trainer",
+      "age": 47,
+      "budget_tier_inr": "2k_5k",
+      "fit": "target",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Cannot tell who is cooking",
+      "constraints": [
+        "Shares a flat"
+      ]
+    },
+    {
+      "name": "Kunal",
+      "segment": "Night-shift worker",
+      "occupation": "Call-centre lead",
+      "age": 54,
+      "budget_tier_inr": "under_500",
+      "fit": "target",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Prefers cooking at home",
+      "constraints": [
+        "Needs dinner after 10 pm"
+      ]
+    },
+    {
+      "name": "Pooja",
+      "segment": "Working professional",
+      "occupation": "Bank clerk",
+      "age": 61,
+      "budget_tier_inr": "5k_15k",
+      "fit": "target",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Needs Jain or low-oil options",
+      "constraints": [
+        "Diabetic diet"
+      ]
+    },
+    {
+      "name": "Sameer",
+      "segment": "Student in a PG",
+      "occupation": "Freelance designer",
+      "age": 68,
+      "budget_tier_inr": "500_2k",
+      "fit": "target",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Delivery timing must fit office hours",
+      "constraints": []
+    },
+    {
+      "name": "Neha",
+      "segment": "Young family",
+      "occupation": "Doctor",
+      "age": 20,
+      "budget_tier_inr": "over_15k",
+      "fit": "target",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Is the food really homemade and hygienic?",
+      "constraints": [
+        "Office hours 9 to 7"
+      ]
+    },
+    {
+      "name": "Arjun",
+      "segment": "Senior living alone",
+      "occupation": "Sales executive",
+      "age": 27,
+      "budget_tier_inr": "2k_5k",
+      "fit": "target",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Price per meal may be too high for daily use",
+      "constraints": [
+        "Tight monthly budget"
+      ]
+    },
+    {
+      "name": "Kavya",
+      "segment": "Fitness-focused",
+      "occupation": "Software engineer",
+      "age": 34,
+      "budget_tier_inr": "under_500",
+      "fit": "target",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Not sure they deliver to my area",
+      "constraints": [
+        "Lives in Hinjewadi"
+      ]
+    },
+    {
+      "name": "Rahul",
+      "segment": "Night-shift worker",
+      "occupation": "MBA student",
+      "age": 41,
+      "budget_tier_inr": "5k_15k",
+      "fit": "target",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Worried the menu will get repetitive",
+      "constraints": [
+        "Vegetarian only",
+        "No onion or garlic"
+      ]
+    },
+    {
+      "name": "Isha",
+      "segment": "Working professional",
+      "occupation": "Nurse",
+      "age": 48,
+      "budget_tier_inr": "500_2k",
+      "fit": "target",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Cannot tell who is cooking",
+      "constraints": [
+        "Shares a flat"
+      ]
+    },
+    {
+      "name": "Nikhil",
+      "segment": "Student in a PG",
+      "occupation": "Retired teacher",
+      "age": 55,
+      "budget_tier_inr": "over_15k",
+      "fit": "target",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Prefers cooking at home",
+      "constraints": [
+        "Needs dinner after 10 pm"
+      ]
+    },
+    {
+      "name": "Divya",
+      "segment": "Young family",
+      "occupation": "Gym trainer",
+      "age": 62,
+      "budget_tier_inr": "2k_5k",
+      "fit": "target",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Needs Jain or low-oil options",
+      "constraints": [
+        "Diabetic diet"
+      ]
+    },
+    {
+      "name": "Siddharth",
+      "segment": "Senior living alone",
+      "occupation": "Call-centre lead",
+      "age": 69,
+      "budget_tier_inr": "under_500",
+      "fit": "target",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Delivery timing must fit office hours",
+      "constraints": []
+    },
+    {
+      "name": "Ananya",
+      "segment": "Fitness-focused",
+      "occupation": "Bank clerk",
+      "age": 21,
+      "budget_tier_inr": "5k_15k",
+      "fit": "adjacent",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Is the food really homemade and hygienic?",
+      "constraints": [
+        "Office hours 9 to 7"
+      ]
+    },
+    {
+      "name": "Manoj",
+      "segment": "Night-shift worker",
+      "occupation": "Freelance designer",
+      "age": 28,
+      "budget_tier_inr": "500_2k",
+      "fit": "adjacent",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Price per meal may be too high for daily use",
+      "constraints": [
+        "Tight monthly budget"
+      ]
+    },
+    {
+      "name": "Ritika",
+      "segment": "Working professional",
+      "occupation": "Doctor",
+      "age": 35,
+      "budget_tier_inr": "over_15k",
+      "fit": "adjacent",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Not sure they deliver to my area",
+      "constraints": [
+        "Lives in Hinjewadi"
+      ]
+    },
+    {
+      "name": "Amit",
+      "segment": "Student in a PG",
+      "occupation": "Sales executive",
+      "age": 42,
+      "budget_tier_inr": "2k_5k",
+      "fit": "adjacent",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Worried the menu will get repetitive",
+      "constraints": [
+        "Vegetarian only",
+        "No onion or garlic"
+      ]
+    },
+    {
+      "name": "Shruti",
+      "segment": "Young family",
+      "occupation": "Software engineer",
+      "age": 49,
+      "budget_tier_inr": "under_500",
+      "fit": "adjacent",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Cannot tell who is cooking",
+      "constraints": [
+        "Shares a flat"
+      ]
+    },
+    {
+      "name": "Varun",
+      "segment": "Senior living alone",
+      "occupation": "MBA student",
+      "age": 56,
+      "budget_tier_inr": "5k_15k",
+      "fit": "adjacent",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Prefers cooking at home",
+      "constraints": [
+        "Needs dinner after 10 pm"
+      ]
+    },
+    {
+      "name": "Gauri",
+      "segment": "Fitness-focused",
+      "occupation": "Nurse",
+      "age": 63,
+      "budget_tier_inr": "500_2k",
+      "fit": "adjacent",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Needs Jain or low-oil options",
+      "constraints": [
+        "Diabetic diet"
+      ]
+    },
+    {
+      "name": "Harsh",
+      "segment": "Night-shift worker",
+      "occupation": "Retired teacher",
+      "age": 70,
+      "budget_tier_inr": "over_15k",
+      "fit": "adjacent",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Delivery timing must fit office hours",
+      "constraints": []
+    },
+    {
+      "name": "Leena",
+      "segment": "Working professional",
+      "occupation": "Gym trainer",
+      "age": 22,
+      "budget_tier_inr": "2k_5k",
+      "fit": "adjacent",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Is the food really homemade and hygienic?",
+      "constraints": [
+        "Office hours 9 to 7"
+      ]
+    },
+    {
+      "name": "Omkar",
+      "segment": "Student in a PG",
+      "occupation": "Call-centre lead",
+      "age": 29,
+      "budget_tier_inr": "under_500",
+      "fit": "weak",
+      "urgency": 1,
+      "skepticism": 1,
+      "tech_comfort": 3,
+      "hidden_objection": "Price per meal may be too high for daily use",
+      "constraints": [
+        "Tight monthly budget"
+      ]
+    },
+    {
+      "name": "Tanvi",
+      "segment": "Young family",
+      "occupation": "Bank clerk",
+      "age": 36,
+      "budget_tier_inr": "5k_15k",
+      "fit": "weak",
+      "urgency": 3,
+      "skepticism": 4,
+      "tech_comfort": 4,
+      "hidden_objection": "Not sure they deliver to my area",
+      "constraints": [
+        "Lives in Hinjewadi"
+      ]
+    },
+    {
+      "name": "Yash",
+      "segment": "Senior living alone",
+      "occupation": "Freelance designer",
+      "age": 43,
+      "budget_tier_inr": "500_2k",
+      "fit": "weak",
+      "urgency": 5,
+      "skepticism": 2,
+      "tech_comfort": 5,
+      "hidden_objection": "Worried the menu will get repetitive",
+      "constraints": [
+        "Vegetarian only",
+        "No onion or garlic"
+      ]
+    },
+    {
+      "name": "Bhavna",
+      "segment": "Fitness-focused",
+      "occupation": "Doctor",
+      "age": 50,
+      "budget_tier_inr": "over_15k",
+      "fit": "non_target",
+      "urgency": 2,
+      "skepticism": 5,
+      "tech_comfort": 1,
+      "hidden_objection": "Cannot tell who is cooking",
+      "constraints": [
+        "Shares a flat"
+      ]
+    },
+    {
+      "name": "Prakash",
+      "segment": "Night-shift worker",
+      "occupation": "Sales executive",
+      "age": 57,
+      "budget_tier_inr": "2k_5k",
+      "fit": "non_target",
+      "urgency": 4,
+      "skepticism": 3,
+      "tech_comfort": 2,
+      "hidden_objection": "Prefers cooking at home",
+      "constraints": [
+        "Needs dinner after 10 pm"
+      ]
+    }
+  ]
+}

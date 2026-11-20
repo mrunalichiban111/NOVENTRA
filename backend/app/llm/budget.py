@@ -10,6 +10,13 @@ both pass. So the reserve transaction first takes one transaction-scoped advisor
 keyed by run_id (a single `pg_advisory_xact_lock`, released at commit) and only then runs
 the atomic INSERT ... SELECT check, which therefore sees a fresh snapshot.
 
+Daily cap (M5): the same transaction then takes a second, global advisory lock ('llm:daily';
+always AFTER the run lock, so lock order is fixed and cannot deadlock) and the same atomic
+INSERT also requires: estimated usage in the last 24h + all active unexpired reservations +
+this amount <= DAILY_SPEND_CAP_USD. `after` flips a reservation to settled/released and writes
+its usage row in ONE transaction, so a call is counted either as an active reservation or as
+usage, never both.
+
 Crash recovery is expiry only: active reservations older than RESERVATION_TTL_S stop
 counting. No cleanup job. Mock mode never reaches this module (cost 0, no cap).
 """
@@ -39,6 +46,7 @@ RESERVATION_TTL_S = 300
 CHARS_PER_TOKEN = 3  # deliberately conservative (real text averages ~4)
 
 _LOCK_SQL = text("SELECT pg_advisory_xact_lock(hashtextextended(:k, 0))")
+DAILY_LOCK_KEY = "llm:daily"
 _RESERVE_SQL = text(
     """
     INSERT INTO llm_budget_reservations (id, run_id, amount_usd, status, created_at, expires_at)
@@ -52,6 +60,13 @@ _RESERVE_SQL = text(
                     AND expires_at > now()), 0)
       + CAST(:amount AS numeric)
     ) <= CAST(:cap AS numeric)
+    AND (
+        COALESCE((SELECT SUM(estimated_cost_usd) FROM llm_usage
+                  WHERE created_at > now() - interval '24 hours'), 0)
+      + COALESCE((SELECT SUM(amount_usd) FROM llm_budget_reservations
+                  WHERE status = 'active' AND expires_at > now()), 0)
+      + CAST(:amount AS numeric)
+    ) <= CAST(:daily_cap AS numeric)
     RETURNING id
     """
 )
@@ -81,6 +96,15 @@ class Reservation:
     amount: Decimal
 
 
+_DAILY_SPEND_SQL = text(
+    """
+    SELECT COALESCE((SELECT SUM(estimated_cost_usd) FROM llm_usage
+                     WHERE created_at > now() - interval '24 hours'), 0)
+         + COALESCE((SELECT SUM(amount_usd) FROM llm_budget_reservations
+                     WHERE status = 'active' AND expires_at > now()), 0)
+    """
+)
+
 _FINALIZE_SQL = text(
     """
     UPDATE llm_budget_reservations SET status = CAST(:status AS varchar)
@@ -101,6 +125,7 @@ class LLMGuard:
         session_factory: SessionFactory | None = None,
         provider_name: str = "claude",
         cap_usd: float | None = None,
+        daily_cap_usd: float | None = None,
     ):
         if not run_id or run_id == "-":
             raise RunIdRequired("LLMGuard needs a run_id: real calls are never uncapped")
@@ -109,6 +134,7 @@ class LLMGuard:
         self.provider_name = provider_name
         self._factory = session_factory
         self._cap = cap_usd
+        self._daily_cap = daily_cap_usd
 
     @property
     def factory(self) -> SessionFactory:
@@ -119,9 +145,14 @@ class LLMGuard:
     def before(self, request: LLMRequest, call_no: int) -> Reservation:
         amount = worst_case_usd(request)  # fail closed on missing pricing / oversized input
         cap = Decimal(str(self._cap if self._cap is not None else config.PER_RUN_CAP_USD))
+        daily = Decimal(
+            str(self._daily_cap if self._daily_cap is not None else config.DAILY_SPEND_CAP_USD)
+        )
         rid = uuid.uuid4()
+        daily_spent: Decimal | None = None
         with self.factory() as session:
             session.execute(_LOCK_SQL, {"k": self.run_id})
+            session.execute(_LOCK_SQL, {"k": DAILY_LOCK_KEY})  # fixed order: run, then daily
             row = session.execute(
                 _RESERVE_SQL,
                 {
@@ -130,10 +161,18 @@ class LLMGuard:
                     "amount": amount,
                     "ttl": RESERVATION_TTL_S,
                     "cap": cap,
+                    "daily_cap": daily,
                 },
             ).first()
-            session.commit()  # releases the advisory lock
+            if row is None:
+                daily_spent = Decimal(session.execute(_DAILY_SPEND_SQL).scalar_one())
+            session.commit()  # releases both advisory locks
         if row is None:
+            if daily_spent is not None and daily_spent + amount > daily:
+                raise BudgetExceeded(
+                    f"daily spend cap ${daily} (rolling 24h) would be exceeded by worst-case "
+                    f"${amount} for this attempt"
+                )
             raise BudgetExceeded(
                 f"per-run cap ${cap} would be exceeded by worst-case ${amount} for this attempt"
             )

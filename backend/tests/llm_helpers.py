@@ -92,7 +92,18 @@ VALID = {
     "assumption_extraction": valid_assumptions,
     "business_names": valid_names,
     "website_content": valid_content,
+    "persona_panel": lambda: _fixture("persona_panel.json"),
+    "persona_evaluation": lambda: _fixture("persona_evaluation.json"),
 }
+
+
+def _fixture(name: str) -> dict[str, Any]:
+    import json
+    from pathlib import Path
+
+    from app import config
+
+    return json.loads((Path(config.FIXTURES_DIR) / "llm" / name).read_text(encoding="utf-8"))
 
 
 def valid_for(task: str) -> dict[str, Any]:

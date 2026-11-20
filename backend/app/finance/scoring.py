@@ -63,3 +63,47 @@ def overall_prelaunch(e: float, r: float) -> float:
 def display_score(value: float) -> float:
     """Rounded value for display and serialization only. Never feed this into a verdict."""
     return round(value, config.SCORE_DECIMALS)
+
+
+# --- Demand score D (SRS Section 6; M5 persona arena, SIMULATED) ----------------------------
+
+RUBRIC_VERSION = "d-v1"  # bump if the D definition or evaluation rubric ever changes
+
+
+def demand_score(per_persona_rates: list[float]) -> tuple[float, float]:
+    """D = 100 x mean of per-persona convert rates (equal repeats per persona, so this equals
+    converted / total evaluations). SE = 100 x sample stdev(rates) / sqrt(n).
+
+    Callers must pass rates only for a COMPLETE evaluation (every persona, every repeat);
+    an incomplete evaluation has no D at all (never extrapolated).
+    """
+    n = len(per_persona_rates)
+    if n == 0:
+        raise ValueError("demand score needs at least one persona")
+    for r in per_persona_rates:
+        if not math.isfinite(r) or not 0 <= r <= 1:
+            raise ValueError(f"convert rate must be within 0-1, got {r!r}")
+    mean = sum(per_persona_rates) / n
+    if n < 2:
+        return _clamp(100 * mean), 0.0
+    var = sum((r - mean) ** 2 for r in per_persona_rates) / (n - 1)
+    return _clamp(100 * mean), 100 * math.sqrt(var) / math.sqrt(n)
+
+
+@dataclass(frozen=True)
+class ComparableKey:
+    panel_id: str
+    evaluator_model: str | None
+    prompt_version: str | None
+    rubric_version: str | None
+
+
+def comparable(a: ComparableKey, a_complete: bool, b: ComparableKey, b_complete: bool) -> bool:
+    """Two D scores are comparable only if both evaluations are complete and share the panel,
+    evaluator model, prompt version and rubric version."""
+    return (
+        a_complete
+        and b_complete
+        and a == b
+        and None not in (a.evaluator_model, a.prompt_version, a.rubric_version)
+    )
