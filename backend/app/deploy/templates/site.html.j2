@@ -1,0 +1,156 @@
+{#- NOVENTRA generated site (template site-1). Repository-owned: model output only fills text
+    values, always autoescaped. No scripts, no external resources, no inline styles. -#}
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="{{ content.hero.subhead }}">
+<title>{{ business_name }}: {{ content.hero.headline }}</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="wrap">
+<p class="brand">{{ business_name }}</p>
+<p class="badge">Coming soon</p>
+</div>
+</header>
+<main id="main">
+<section class="hero" aria-labelledby="hero-title">
+<div class="wrap">
+<h1 id="hero-title">{{ content.hero.headline }}</h1>
+<p class="lead">{{ content.hero.subhead }}</p>
+<a class="button" href="#join">{{ content.hero.button_label }}</a>
+</div>
+</section>
+<section class="problem" aria-labelledby="problem-title">
+<div class="wrap">
+<h2 id="problem-title">The problem</h2>
+<ul class="pains">
+{% for pain in content.problem %}
+<li>{{ pain }}</li>
+{% endfor %}
+</ul>
+</div>
+</section>
+<section class="offer" aria-labelledby="offer-title">
+<div class="wrap">
+<h2 id="offer-title">What you get</h2>
+<ul class="cards">
+{% for item in content.offer %}
+<li class="card">
+<h3>{{ item.title }}</h3>
+<p>{{ item.body }}</p>
+</li>
+{% endfor %}
+</ul>
+</div>
+</section>
+<section class="steps" aria-labelledby="steps-title">
+<div class="wrap">
+<h2 id="steps-title">How it works</h2>
+<ol class="cards">
+{% for step in content.how_it_works %}
+<li class="card">
+<h3>{{ step.title }}</h3>
+<p>{{ step.body }}</p>
+</li>
+{% endfor %}
+</ol>
+</div>
+</section>
+<section class="proof" aria-labelledby="proof-title">
+<div class="wrap">
+<h2 id="proof-title">About us</h2>
+{% if content.proof.founder_story %}
+<h3>Our story</h3>
+<p>{{ content.proof.founder_story }}</p>
+{% endif %}
+{% if content.proof.process %}
+<h3>How we work</h3>
+<p>{{ content.proof.process }}</p>
+{% endif %}
+{% if content.proof.guarantees %}
+<h3>Our promise</h3>
+<p>{{ content.proof.guarantees }}</p>
+{% endif %}
+{% if content.proof.missing_proof %}
+<div class="not-yet">
+<h3>What we cannot show yet</h3>
+<p>We have not launched, so there is no customer proof yet:</p>
+<ul>
+{% for gap in content.proof.missing_proof %}
+<li>{{ gap }}</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+</div>
+</section>
+<section class="pricing" aria-labelledby="pricing-title">
+<div class="wrap">
+<h2 id="pricing-title">Pricing</h2>
+{% if pricing.plan %}
+<div class="card plan">
+<h3>{{ pricing.plan.name }}</h3>
+<p class="price">{{ pricing.plan.price }}</p>
+<ul>
+{% for bullet in pricing.plan.bullets %}
+<li>{{ bullet }}</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+<p class="note">{{ pricing.note }}</p>
+</div>
+</section>
+<section class="faq" aria-labelledby="faq-title">
+<div class="wrap">
+<h2 id="faq-title">Questions</h2>
+{% for item in content.faq %}
+<details>
+<summary>{{ item.question }}</summary>
+<p>{{ item.answer }}</p>
+</details>
+{% endfor %}
+</div>
+</section>
+<section class="cta" id="join" aria-labelledby="join-title">
+<div class="wrap">
+<h2 id="join-title">{{ content.cta.headline }}</h2>
+{% if waitlist_action %}
+<form class="waitlist" action="{{ waitlist_action }}" method="post">
+<input type="hidden" name="site" value="{{ host }}">
+{% if "name" in content.cta.form_fields %}
+<label for="wl-name">Name (optional)</label>
+<input id="wl-name" name="name" type="text" autocomplete="name" maxlength="100">
+{% endif %}
+<label for="wl-email">Email</label>
+<input id="wl-email" name="email" type="email" autocomplete="email" maxlength="320" required>
+<div class="hp" aria-hidden="true">
+<label for="wl-website">Leave this field empty</label>
+<input id="wl-website" name="website" type="text" tabindex="-1" autocomplete="off">
+</div>
+<button type="submit">{{ content.cta.button_label }}</button>
+</form>
+{% else %}
+<p class="note">The waitlist opens soon. Please check back shortly.</p>
+{% endif %}
+</div>
+</section>
+</main>
+<footer class="site-footer">
+<div class="wrap">
+<p>{{ business_name }} has not launched yet. This page collects early interest.</p>
+<p>Page generated with NOVENTRA. Content is AI-written from the founder's idea.</p>
+{% if abuse_email %}
+<p><a href="mailto:{{ abuse_email }}">Report abuse</a> (please include this page address)</p>
+{% endif %}
+</div>
+</footer>
+</body>
+</html>

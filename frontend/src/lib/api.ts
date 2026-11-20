@@ -94,7 +94,15 @@ export interface Business {
   id: string;
   idea_text: string;
   market: string;
+  // Decimal fields are serialised as strings by the API.
+  price_guess: string | null;
+  starting_budget: string | null;
+  target_customer: string | null;
   status: Status;
+  // The claimed NOVENTRA subdomain once a name is selected (M4A), else null.
+  domain: string | null;
+  created_at: string;
+  updated_at: string;
   pipeline: Pipeline;
   rejection_reason: string | null;
   premortem: PreMortem | null;
@@ -112,36 +120,71 @@ export interface NewIdea {
   starting_budget?: number;
 }
 
+export interface ContactMessage {
+  name: string;
+  email: string;
+  message: string;
+  website?: string;
+}
+
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(message: string, readonly status: number, readonly code: string | null = null) {
     super(message);
   }
 }
 
-async function errorMessage(res: Response): Promise<string> {
-  if (res.status === 429) return "Too many requests. Please wait a minute and try again.";
+// Error bodies come in three shapes: `detail: "text"` (businesses routes), `detail: [{msg}]`
+// (validation) and `detail: {code, message}` (names and sites routes).
+async function parseError(res: Response): Promise<{ message: string; code: string | null }> {
+  if (res.status === 429) {
+    return { message: "Too many requests. Please wait a minute and try again.", code: "rate_limited" };
+  }
   try {
     const body = await res.json();
     const d = body.detail;
-    if (typeof d === "string") return d;
+    if (typeof d === "string") return { message: d, code: null };
     if (Array.isArray(d)) {
-      return d.map((e: { msg?: string }) => (e.msg ?? "Invalid input").replace(/^Value error, /, "")).join(" ");
+      const message = d.map((e: { msg?: string }) => (e.msg ?? "Invalid input").replace(/^Value error, /, "")).join(" ");
+      return { message, code: null };
+    }
+    if (d && typeof d === "object" && typeof d.message === "string") {
+      return { message: d.message, code: typeof d.code === "string" ? d.code : null };
     }
   } catch {
     // fall through
   }
-  return `Request failed (${res.status}).`;
+  return { message: `Request failed (${res.status}).`, code: null };
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api/businesses${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
-  if (!res.ok) throw new ApiError(await errorMessage(res), res.status);
+// `path` is relative to /api, e.g. "/businesses/<id>/names".
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, {
+      ...init,
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", ...init?.headers },
+    });
+  } catch {
+    // fetch rejects with a bare TypeError ("Failed to fetch") when the server is unreachable.
+    // Status 0 means no response was received, so the request may or may not have been processed.
+    throw new ApiError("Could not reach the server. Check your connection and try again.", 0, "network");
+  }
+
+  if (!res.ok) {
+    const { message, code } = await parseError(res);
+    throw new ApiError(message, res.status, code);
+  }
   return (await res.json()) as T;
 }
+
+export const submitContact = (contact: ContactMessage) =>
+  request<{ status: string }>("/public/contact", {
+    method: "POST",
+    body: JSON.stringify(contact),
+  });
+
+const call = <T>(path: string, init?: RequestInit) => request<T>(`/businesses${path}`, init);
 
 export const createBusiness = (idea: NewIdea) =>
   call<{ id: string; status: Status }>("", { method: "POST", body: JSON.stringify(idea) });

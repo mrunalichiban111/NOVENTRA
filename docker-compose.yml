@@ -26,8 +26,30 @@ services:
       CLAUDE_MODEL_STRONG: ${CLAUDE_MODEL_STRONG:-}
       CLAUDE_MODEL_SMALL: ${CLAUDE_MODEL_SMALL:-}
       PER_RUN_CAP_USD: ${PER_RUN_CAP_USD:-2.00}
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-}
+      CONTACT_TO: ${CONTACT_TO:-}
+      CONTACT_FROM: ${CONTACT_FROM:-}
       FIXTURES_DIR: /app/fixtures
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      BASE_DOMAIN: ${BASE_DOMAIN:-}
+      GODADDY_PAT: ${GODADDY_PAT:-}
+      GODADDY_TLDS: ${GODADDY_TLDS:-in,com,co}
+      DOMAIN_CHECK_MOCK: ${DOMAIN_CHECK_MOCK:-}
+      # M4B: the API validates deploy config before accepting a deploy request (same guards
+      # as the worker) and serves the internal Caddy TLS permission check. No sites mount.
+      APP_ENV: ${APP_ENV:-production}
+      DEPLOY_PROVIDER: ${DEPLOY_PROVIDER:-}
+      SITE_DNS_MODE: ${SITE_DNS_MODE:-skip}
+      SITE_HTTP_CHECK: ${SITE_HTTP_CHECK:-}
+      SITE_HEALTH_TIMEOUT_S: ${SITE_HEALTH_TIMEOUT_S:-60}
+      SITE_REQUIRE_PUBLIC: ${SITE_REQUIRE_PUBLIC:-}
+      INTERNAL_TLS_ASK_TOKEN: ${INTERNAL_TLS_ASK_TOKEN:-}
     volumes:
       - ./fixtures:/app/fixtures:ro
     depends_on:
@@ -49,16 +71,28 @@ services:
       DATABASE_URL: postgresql+psycopg://${APP_DB_USER:?APP_DB_USER is required}:${APP_DB_PASSWORD:?APP_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       APP_ENV: ${APP_ENV:-production}
       MOCK_LLM: ${MOCK_LLM:-true}
+      DOMAIN_CHECK_MOCK: ${DOMAIN_CHECK_MOCK:-1}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       CLAUDE_MODEL_STRONG: ${CLAUDE_MODEL_STRONG:-}
       CLAUDE_MODEL_SMALL: ${CLAUDE_MODEL_SMALL:-}
       PER_RUN_CAP_USD: ${PER_RUN_CAP_USD:-2.00}
       FIXTURES_DIR: /app/fixtures
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      # M4B site generation and deployment. Empty DEPLOY_PROVIDER = off (safe default).
+      BASE_DOMAIN: ${BASE_DOMAIN:-}
+      DEPLOY_PROVIDER: ${DEPLOY_PROVIDER:-}
+      SITES_ROOT: /srv/sites
+      SITE_DNS_MODE: ${SITE_DNS_MODE:-skip}
+      SITE_HTTP_CHECK: ${SITE_HTTP_CHECK:-}
+      SITE_HEALTH_TIMEOUT_S: ${SITE_HEALTH_TIMEOUT_S:-60}
+      SITE_REQUIRE_PUBLIC: ${SITE_REQUIRE_PUBLIC:-}
+      WAITLIST_POST_URL: ${WAITLIST_POST_URL:-}
+      ABUSE_REPORT_EMAIL: ${ABUSE_REPORT_EMAIL:-}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
+      # The ONLY read-write mount of the generated sites (Caddy: read-only; API: none).
       - sites:/srv/sites
       - ./fixtures:/app/fixtures:ro
     restart: unless-stopped

@@ -9,7 +9,7 @@ from app.config import WORKER_CLAIM_TTL_SECONDS, WORKER_POLL_SECONDS
 from app.database import SessionLocal
 from app.models import BusinessStatus
 from app.pipeline import repository
-from app.pipeline.handlers import m3_stages
+from app.pipeline.handlers import pipeline_stages
 from app.pipeline.runner import Handler, current_run_id, run_business
 from app.pipeline.status import RETRYABLE_STAGES
 
@@ -34,7 +34,7 @@ def stop_worker(signum: int, _frame: object) -> None:
 
 def work_once(worker_id: str, stages: dict[BusinessStatus, Handler] | None = None) -> bool:
     """Claim and run one business. Returns False if nothing was claimable."""
-    stages = stages or m3_stages()
+    stages = stages or pipeline_stages()
     halted = RETRYABLE_STAGES - stages.keys()  # stop points (e.g. GATED) are never claimed
     with SessionLocal() as session:
         business = repository.claim_next(
@@ -63,7 +63,7 @@ def main() -> None:
     signal.signal(signal.SIGINT, stop_worker)
     signal.signal(signal.SIGTERM, stop_worker)
     worker_id = make_worker_id()
-    logger.info("NOVENTRA worker %s started (stub pipeline)", worker_id)
+    logger.info("NOVENTRA worker %s started", worker_id)
     while not stop_event.is_set():
         try:
             did_work = work_once(worker_id)

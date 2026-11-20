@@ -1,66 +1,37 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { getBusiness, retryBusiness, type Business } from "@/lib/api";
+import { useCallback, useState } from "react";
+import { retryBusiness } from "@/lib/api";
 import AssumptionsTable from "./AssumptionsTable";
 import PreMortem from "./PreMortem";
 import Scenarios from "./Scenarios";
 import Scorecard from "./Scorecard";
 import Tracker from "./Tracker";
 import ui from "./ui.module.css";
+import NextAction from "./workspace/NextAction";
+import { useWorkspace } from "./workspace/WorkspaceProvider";
 import { VERDICT_LABEL } from "@/lib/format";
 
-const POLL_MS = 2000;
-// The pipeline pauses at GATED in this milestone; these states need no more polling.
-const SETTLED = new Set(["GATED", "REJECTED", "FAILED", "DONE"]);
+// Loading, load errors and polling belong to the workspace provider; this renders the assessment.
+export default function BusinessView() {
+  const { id, business, update } = useWorkspace();
+  const [actionError, setActionError] = useState<string | null>(null);
 
-export default function BusinessView({ id }: { id: string }) {
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [polling, setPolling] = useState(true);
-
-  useEffect(() => {
-    if (!polling) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-    async function tick() {
-      try {
-        const b = await getBusiness(id);
-        if (cancelled) return;
-        setBusiness(b);
-        setError(null);
-        if (SETTLED.has(b.status)) { setPolling(false); return; }
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Could not load this assessment.");
-      }
-      timer = setTimeout(tick, POLL_MS);
-    }
-    void tick();
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [id, polling]);
-
+  // `update` also restarts the provider's polling, because the retried business is in progress.
   const retry = useCallback(async () => {
     try {
-      setBusiness(await retryBusiness(id));
-      setError(null);
-      setPolling(true);
+      update(await retryBusiness(id));
+      setActionError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Retry failed.");
+      setActionError(e instanceof Error ? e.message : "Retry failed.");
     }
-  }, [id]);
-
-  // Assumption edits return the full recomputed business; the pipeline is not restarted.
-  const updated = useCallback((b: Business) => setBusiness(b), []);
+  }, [id, update]);
 
   const rethink = business?.verdict === "rethink";
 
   return (
-    <main className={ui.shell}>
-      <Link href="/" className={ui.brand}>NOVENTRA</Link>
-      {!business && !error && <p className={ui.muted}>Loading…</p>}
-      {error && <p className={ui.error} role="alert">{error}</p>}
+    <div>
+      {actionError && <p className={ui.error} role="alert">{actionError}</p>}
 
       {business && (
         <>
@@ -114,12 +85,14 @@ export default function BusinessView({ id }: { id: string }) {
             </div>
           )}
 
+          <NextAction business={business} />
+
           <Scorecard business={business} />
           <Scenarios business={business} />
-          <AssumptionsTable business={business} onUpdated={updated} />
+          <AssumptionsTable business={business} onUpdated={update} />
           <PreMortem business={business} />
         </>
       )}
-    </main>
+    </div>
   );
 }

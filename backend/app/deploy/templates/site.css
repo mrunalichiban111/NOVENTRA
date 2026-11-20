@@ -1,0 +1,78 @@
+/* NOVENTRA generated site (template site-1). Repository-owned, mobile first, no external resources. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1c1f24;
+  background: #ffffff;
+}
+.wrap { width: 100%; max-width: 64rem; margin: 0 auto; padding: 0 1.25rem; }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 0.75rem; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.125rem; }
+p { margin: 0 0 1rem; }
+a { color: #0b57d0; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 3px solid #f2a900;
+  outline-offset: 2px;
+}
+.skip { position: absolute; left: -999px; top: 0; padding: 0.5rem 1rem; background: #ffffff; }
+.skip:focus { left: 1rem; }
+.site-header { border-bottom: 1px solid #e3e6ea; padding: 0.75rem 0; }
+.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.brand { font-weight: 700; font-size: 1.125rem; margin: 0; }
+.badge { margin: 0; font-size: 0.8125rem; padding: 0.125rem 0.625rem; border-radius: 999px; background: #eef3fd; color: #0b3d91; }
+section { padding: 2.5rem 0; }
+section:nth-of-type(even) { background: #f6f8fa; }
+.hero { padding: 3.5rem 0; }
+.lead { font-size: 1.125rem; color: #3b4048; max-width: 40rem; }
+.button, button {
+  display: inline-block;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #0b57d0;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pains { padding-left: 1.25rem; }
+.pains li { margin-bottom: 0.5rem; }
+.cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.card { background: #ffffff; border: 1px solid #e3e6ea; border-radius: 0.75rem; padding: 1.25rem; }
+.card p:last-child { margin-bottom: 0; }
+.not-yet { border-left: 4px solid #f2a900; padding: 0.75rem 1rem; background: #fffaf0; }
+.plan { max-width: 24rem; }
+.price { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+.note { color: #5a606a; font-size: 0.9375rem; }
+details { border-bottom: 1px solid #e3e6ea; padding: 0.75rem 0; }
+summary { cursor: pointer; font-weight: 600; }
+details p { margin: 0.5rem 0 0; }
+.waitlist { display: grid; gap: 0.5rem; max-width: 28rem; }
+.waitlist label { font-weight: 600; }
+.waitlist input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #a8afb8;
+  border-radius: 0.5rem;
+  font: inherit;
+}
+.waitlist button { margin-top: 0.5rem; justify-self: start; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.site-footer { border-top: 1px solid #e3e6ea; padding: 1.5rem 0; font-size: 0.875rem; color: #5a606a; }
+@media (min-width: 48rem) {
+  h1 { font-size: 2.75rem; }
+  .hero { padding: 5rem 0; }
+  .cards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

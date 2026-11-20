@@ -7,11 +7,28 @@ from typing import Annotated, Any, Literal
 from pydantic import (
     BaseModel,
     ConfigDict,
+    EmailStr,
     Field,
     StringConstraints,
     field_validator,
     model_validator,
 )
+
+
+class ContactCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    message: str = Field(min_length=10, max_length=2000)
+    website: str = Field(default="", max_length=200)
+
+    @field_validator("name", "email")
+    @classmethod
+    def _no_control_characters(cls, value: str) -> str:
+        if any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise ValueError("must not contain control characters")
+        return value
 
 MAX_IDEA_CHARS = 2000
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
@@ -158,3 +175,132 @@ class BusinessDetail(BaseModel):
     scorecard: ScorecardOut | None = None
     verdict: str | None = None
     verdict_explanation: list[str] = []
+
+
+# --- M4A: business names and subdomain claims (FR-BR-1..5) ----------------------------
+
+NAMES_DISCLAIMER = (
+    "Names are ranked by a simple heuristic on the web address only. This is not a trademark, "
+    "legal-clearance or domain-registration check."
+)
+
+
+class GenerateNamesRequest(BaseModel):
+    """Empty by design: inputs come from the stored analysis, never from the client."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class DomainCheckOut(BaseModel):
+    domain: str
+    tld: str
+    status: Literal["AVAILABLE", "UNAVAILABLE", "UNKNOWN"]
+    reason: str | None = None
+    message: str
+    raw_price: Decimal | None = None  # registrar's raw value; units unverified, not a quote
+    currency: str | None = None
+    definitive: bool | None = None
+    checked_at: datetime | None = None
+    cached: bool = False
+
+
+class NameCandidateOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    slug: str | None
+    rank: int | None
+    score_total: Decimal | None
+    score_factors: dict[str, Any]
+    valid: bool
+    invalid_reason: str | None
+    rationale: str | None
+    subdomain_available: bool
+    subdomain_host: str | None
+    selected: bool
+    domain_checks: list[DomainCheckOut] = []
+
+
+class NamesList(BaseModel):
+    business_id: uuid.UUID
+    status: str
+    subdomains_configured: bool
+    generations_used: int
+    generations_max: int
+    disclaimer: str = NAMES_DISCLAIMER
+    candidates: list[NameCandidateOut]
+
+
+class NamesGenerated(NamesList):
+    run_id: str
+    replayed: bool
+
+
+class AvailabilityOut(BaseModel):
+    candidate_id: uuid.UUID
+    slug: str
+    results: list[DomainCheckOut]
+    disclaimer: str = (
+        "Read-only check. NOVENTRA never buys domains. 'Likely available' must be verified on "
+        "GoDaddy; prices are the registrar's raw values and are not a quote."
+    )
+
+
+class NameSelected(BaseModel):
+    business_status: str
+    subdomain_host: str | None
+    changed: bool
+    replaced_slug: str | None
+    candidate: NameCandidateOut
+
+
+# --- M4B: site deployment ----------------------------------------------------------------
+
+
+class DeployRequested(BaseModel):
+    business_id: uuid.UUID
+    status: str
+    host: str | None
+    changed: bool  # False: already deploying or live (idempotent repeat)
+
+
+class SiteVersionOut(BaseModel):
+    version: int
+    status: str
+    content_hash: str | None
+    artifact_hash: str | None
+    parent_version: int | None
+    generation_attempt: int
+    error: str | None
+    deployed_at: datetime | None
+    created_at: datetime
+
+
+class SiteOut(BaseModel):
+    business_id: uuid.UUID
+    status: str
+    host: str | None
+    url: str | None
+    live_version: int | None
+    verification_level: str | None  # simulated | local | public
+    publicly_reachable: bool  # True only for `public` verification
+    versions: list[SiteVersionOut]
+
+
+class DeploymentOut(BaseModel):
+    id: uuid.UUID
+    version: int
+    attempt: int
+    host: str
+    provider: str
+    status: str
+    verification_level: str | None
+    publicly_reachable: bool
+    error: str | None
+    checks: list[dict[str, Any]]
+    started_at: datetime
+    finished_at: datetime | None
+
+
+class DeploymentsList(BaseModel):
+    business_id: uuid.UUID
+    deployments: list[DeploymentOut]

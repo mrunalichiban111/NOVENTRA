@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NOVENTRA: launch verdict for your business idea",
-  description: "Evidence-backed launch assessment: pre-mortem, economics, risk and verdict.",
+  title: "NOVENTRA — The founder's launchpad",
+  description: "Stress-test your business idea before investing in the wrong business.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

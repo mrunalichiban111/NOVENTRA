@@ -40,6 +40,8 @@ class StageResult:
     reason: str
     version_ref: str | None = None
     action: str | None = None  # audit action; defaults to stage.<status>
+    # Stable identity of this transition for its idempotency key (see status.transition).
+    key_ref: str | None = None
 
 
 # A handler does the work for the stage the business is *currently in* and says where to go.
@@ -99,6 +101,7 @@ def run_business(
                         version_ref=result.version_ref,
                         expected_from=current,
                         worker_id=worker_id,
+                        key_ref=result.key_ref,
                     )
                     session.commit()
                     logger.info("%s stage %s -> %s", prefix, current, result.next_status)

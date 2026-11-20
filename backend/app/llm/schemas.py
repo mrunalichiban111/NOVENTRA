@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.llm.content_rules import check_fields
+
 
 class _Out(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -152,7 +154,7 @@ class WebsiteContent(_Out):
     offer: list[TitledBody140] = Field(min_length=3, max_length=3)
     how_it_works: list[TitledBody120] = Field(min_length=3, max_length=3)
     proof: Proof
-    pricing: list[PricingPlan] = Field(min_length=1, max_length=3)
+    pricing: list[PricingPlan] = Field(min_length=1, max_length=1)  # one plan (M4B)
     faq: list[FaqItem] = Field(min_length=4, max_length=6)
     cta: Cta
 
@@ -161,6 +163,54 @@ class WebsiteContent(_Out):
         if any(not p or len(p) > 100 for p in self.problem):
             raise ValueError("problem pain points must be 1-100 characters")
         return self
+
+    @model_validator(mode="after")
+    def _safe_text(self) -> "WebsiteContent":
+        """Plain text only: no markup, links or invented proof (app/llm/content_rules.py)."""
+        problems = check_fields(self.text_fields())
+        if problems:
+            more = len(problems) - 6
+            raise ValueError("; ".join(problems[:6]) + (f"; and {more} more" if more > 0 else ""))
+        return self
+
+    def text_fields(self) -> list[tuple[str, str, bool, bool]]:
+        """(path, text, check_proof_claims, check_counts) for every model-written string.
+
+        missing_proof deliberately names absent proof ("No customer testimonials yet"), so only
+        markup/link rules apply there. Pricing bullets may state plan limits ("Up to 3 users").
+        """
+        h, p, c = self.hero, self.proof, self.cta
+        out = [
+            ("hero.headline", h.headline, True, True),
+            ("hero.subhead", h.subhead, True, True),
+            ("hero.button_label", h.button_label, True, True),
+            ("proof.founder_story", p.founder_story, True, True),
+            ("proof.process", p.process, True, True),
+            ("proof.guarantees", p.guarantees, True, True),
+            ("cta.headline", c.headline, True, True),
+            ("cta.button_label", c.button_label, True, True),
+        ]
+        out += [(f"problem.{i}", t, True, True) for i, t in enumerate(self.problem)]
+        for name, items in (("offer", self.offer), ("how_it_works", self.how_it_works)):
+            for i, item in enumerate(items):
+                out += [
+                    (f"{name}.{i}.title", item.title, True, True),
+                    (f"{name}.{i}.body", item.body, True, True),
+                ]
+        out += [
+            (f"proof.missing_proof.{i}", t, False, False) for i, t in enumerate(p.missing_proof)
+        ]
+        for i, plan in enumerate(self.pricing):
+            out.append((f"pricing.{i}.name", plan.name, True, True))
+            out += [
+                (f"pricing.{i}.bullets.{j}", b, True, False) for j, b in enumerate(plan.bullets)
+            ]
+        for i, item in enumerate(self.faq):
+            out += [
+                (f"faq.{i}.question", item.question, True, True),
+                (f"faq.{i}.answer", item.answer, True, True),
+            ]
+        return out
 
 
 # Task name -> output schema. Keep in sync with routing.TASKS.

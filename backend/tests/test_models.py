@@ -23,7 +23,7 @@ from app.models import (
 EXPECTED_TABLES = {
     "businesses", "assumptions", "scorecards", "domain_candidates", "site_versions",
     "persona_panels", "persona_runs", "improvement_attempts", "approvals", "audit_log",
-    "waitlist_signups",
+    "waitlist_signups", "deployments",
 }  # fmt: skip
 
 

@@ -10,20 +10,19 @@ Every real model call receives the runner's current run_id so the per-run cap ap
 
 import logging
 from collections.abc import Callable
-from datetime import timedelta
 from decimal import Decimal
+from typing import Any
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.agents import moderation
 from app.agents.premortem import RunLLM, run_assumption_extraction, run_premortem
-from app.config import WORKER_CLAIM_TTL_SECONDS
 from app.llm.base import RefusalError
 from app.llm.structured import run_structured
 from app.models import Assumption, Business, BusinessStatus
-from app.pipeline import analysis, status
-from app.pipeline.runner import Handler, StageResult, current_run_id, current_worker_id
+from app.pipeline import analysis
+from app.pipeline.checkpoint import checkpoint, hold_lease, model_call_lease_s
+from app.pipeline.runner import Handler, StageResult, current_run_id
 
 S = BusinessStatus
 logger = logging.getLogger(__name__)
@@ -42,22 +41,8 @@ def _reject(session: Session, business: Business, reason: str, action: str) -> S
 
 
 def _checkpoint(session: Session, business: Business, apply: Callable[[Business], None]) -> None:
-    """Commit a mid-stage result only if we still own the business.
-
-    Takes the row lock (so no other worker can claim it meanwhile), then requires the status to
-    still be PREMORTEM and, when run by a worker, a live lease (LeaseLost / StaleState end the
-    stage quietly in the runner, writing nothing). A successful checkpoint extends the lease
-    for the next long model call.
-    """
-    locked = status.lock_business(session, business.id)
-    if locked.status != S.PREMORTEM:
-        raise status.StaleState(f"Business {locked.id} is {locked.status}, expected PREMORTEM")
-    worker = current_worker_id.get()
-    if worker is not None:
-        status.assert_lease(session, locked, worker)
-        locked.locked_until = func.now() + timedelta(seconds=WORKER_CLAIM_TTL_SECONDS)
-    apply(locked)
-    session.commit()
+    """PREMORTEM checkpoint (see app/pipeline/checkpoint.py)."""
+    checkpoint(session, business.id, S.PREMORTEM, apply)
 
 
 def make_premortem_stage(run_llm: RunLLM = run_structured) -> Handler:
@@ -76,6 +61,8 @@ def make_premortem_stage(run_llm: RunLLM = run_structured) -> Handler:
                 )
 
             # 2. Pre-mortem. A model refusal is a safety refusal, not a commercial verdict.
+            # Hold the lease for the whole call first (the runner's renewal is only the TTL).
+            hold_lease(session, business.id, S.PREMORTEM, model_call_lease_s("premortem"))
             try:
                 stored = run_premortem(business, run_id=run_id, run_llm=run_llm)
             except RefusalError:
@@ -96,6 +83,9 @@ def make_premortem_stage(run_llm: RunLLM = run_structured) -> Handler:
 
         # 3. Assumption extraction (source=llm).
         if not analysis.load_assumptions(session, business.id):
+            hold_lease(
+                session, business.id, S.PREMORTEM, model_call_lease_s("assumption_extraction")
+            )
             extracted = run_assumption_extraction(business, run_id=run_id, run_llm=run_llm)
 
             def store_assumptions(b: Business) -> None:
@@ -135,3 +125,35 @@ def make_premortem_stage(run_llm: RunLLM = run_structured) -> Handler:
 def m3_stages(run_llm: RunLLM = run_structured) -> dict[BusinessStatus, Handler]:
     """Handlers for M3. GATED (and everything after) is intentionally absent."""
     return {S.INTAKE: _intake, S.PREMORTEM: make_premortem_stage(run_llm)}
+
+
+def make_deploy_stage(
+    run_llm: RunLLM = run_structured,
+    *,
+    provider_factory: Callable[[], Any] | None = None,
+    links: Any = None,
+    require_public: bool | None = None,
+) -> Handler:
+    """DEPLOYING -> LIVE (M4B). The provider and settings are resolved per run, so a config
+    error fails the stage visibly instead of crashing the worker."""
+
+    def deploy_stage(session: Session, business: Business) -> StageResult:
+        from app.deploy import service
+
+        ctx = service.make_context(
+            run_llm,
+            provider_factory=provider_factory,
+            links=links,
+            require_public=require_public,
+        )
+        return service.run_deploy_stage(session, business, ctx)
+
+    return deploy_stage
+
+
+def pipeline_stages(
+    run_llm: RunLLM = run_structured, **deploy_kw: Any
+) -> dict[BusinessStatus, Handler]:
+    """All implemented stages: M3 plus DEPLOYING (M4B). DOMAIN_PENDING and LIVE have no handler
+    on purpose: DOMAIN_PENDING waits for an explicit deploy request, LIVE waits for M5."""
+    return {**m3_stages(run_llm), S.DEPLOYING: make_deploy_stage(run_llm, **deploy_kw)}

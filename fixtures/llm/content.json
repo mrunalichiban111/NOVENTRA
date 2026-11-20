@@ -56,15 +56,6 @@
         "Up to 100 orders a month",
         "Email support"
       ]
-    },
-    {
-      "name": "Neighbourhood",
-      "price_inr": 1999,
-      "bullets": [
-        "Shared routes with nearby shops",
-        "Up to 400 orders a month",
-        "Priority email support"
-      ]
     }
   ],
   "faq": [

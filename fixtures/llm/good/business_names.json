@@ -1,0 +1,172 @@
+{
+  "candidates": [
+    {
+      "name": "Taxnest",
+      "rationale": "A safe nest for your tax papers"
+    },
+    {
+      "name": "Filewise",
+      "rationale": "Wise about filing"
+    },
+    {
+      "name": "Ledgerly",
+      "rationale": "Friendly take on a ledger"
+    },
+    {
+      "name": "Gstmate",
+      "rationale": "A mate for GST filing"
+    },
+    {
+      "name": "Returnly",
+      "rationale": "About tax returns"
+    },
+    {
+      "name": "Taxeasy",
+      "rationale": "Tax made easy"
+    },
+    {
+      "name": "Fileready",
+      "rationale": "Always ready to file"
+    },
+    {
+      "name": "Sellerfile",
+      "rationale": "Filing for online sellers"
+    },
+    {
+      "name": "Freelancetax",
+      "rationale": "Tax help for freelancers"
+    },
+    {
+      "name": "Taxpal",
+      "rationale": "A pal for tax season"
+    },
+    {
+      "name": "Filepath",
+      "rationale": "A clear path to filing"
+    },
+    {
+      "name": "Clearbook",
+      "rationale": "Clean, clear books"
+    },
+    {
+      "name": "Sumwise",
+      "rationale": "Wise with sums"
+    },
+    {
+      "name": "Taxbridge",
+      "rationale": "Bridge to a CA partner"
+    },
+    {
+      "name": "Duedate",
+      "rationale": "Never miss a due date"
+    },
+    {
+      "name": "Filingo",
+      "rationale": "Playful word for filing"
+    },
+    {
+      "name": "Taxora",
+      "rationale": "Invented, soft-sounding"
+    },
+    {
+      "name": "Kitaab",
+      "rationale": "Hindi for book"
+    },
+    {
+      "name": "Hisaab",
+      "rationale": "Hindi for accounts"
+    },
+    {
+      "name": "Lekha",
+      "rationale": "Sanskrit for account"
+    },
+    {
+      "name": "Bahikhata",
+      "rationale": "Traditional Indian ledger"
+    },
+    {
+      "name": "Taxsetu",
+      "rationale": "Setu means bridge"
+    },
+    {
+      "name": "Filemitra",
+      "rationale": "Mitra means friend"
+    },
+    {
+      "name": "Taxdost",
+      "rationale": "Dost means friend"
+    },
+    {
+      "name": "Returnwise",
+      "rationale": "Wise about returns"
+    },
+    {
+      "name": "Gstready",
+      "rationale": "Ready for GST"
+    },
+    {
+      "name": "Calmfile",
+      "rationale": "Filing without stress"
+    },
+    {
+      "name": "Simplytax",
+      "rationale": "Simply tax"
+    },
+    {
+      "name": "  Ledger   Lane  ",
+      "rationale": "Extra spaces collapse to one"
+    },
+    {
+      "name": "Café Ledger",
+      "rationale": "Accent folds to plain e"
+    },
+    {
+      "name": "Tax2Go",
+      "rationale": "Digit penalised in ranking"
+    },
+    {
+      "name": "Tax & File",
+      "rationale": "Ampersand is unsupported"
+    },
+    {
+      "name": "xn--taxfile",
+      "rationale": "Punycode prefix is rejected"
+    },
+    {
+      "name": "--x",
+      "rationale": "Edge hyphens are not repaired"
+    },
+    {
+      "name": "Go - File",
+      "rationale": "Spaced hyphen makes a double hyphen"
+    },
+    {
+      "name": "Tx",
+      "rationale": "Too short"
+    },
+    {
+      "name": "Api",
+      "rationale": "Reserved infrastructure label"
+    },
+    {
+      "name": "Noventra",
+      "rationale": "Reserved brand label"
+    },
+    {
+      "name": "Dashboard",
+      "rationale": "Reserved app label"
+    },
+    {
+      "name": "Help",
+      "rationale": "Reserved support label"
+    },
+    {
+      "name": "Taxnëst",
+      "rationale": "Same slug as Taxnest"
+    },
+    {
+      "name": "FILEWISE",
+      "rationale": "Case duplicate of Filewise"
+    }
+  ]
+}

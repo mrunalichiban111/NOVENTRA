@@ -29,8 +29,11 @@ PIPELINE_ORDER: tuple[BusinessStatus, ...] = (
 
 # Stages where the pipeline deliberately pauses (no automatic next stage yet). In M3 the
 # pipeline stops at GATED for every verdict; a later milestone adds the approval/override.
-# The API reports next_stage=None for these, and handlers must not exist for them.
-PAUSE_STAGES: frozenset[BusinessStatus] = frozenset({S.GATED})
+# DOMAIN_PENDING (M4A) waits for the deploy stage (M4B). The API reports next_stage=None for
+# these, and handlers must not exist for them. The worker derives its halted statuses from
+# handler keys, and retry() uses failed_stage, so neither depends on this set.
+# LIVE (M4B) waits for the persona arena (M5).
+PAUSE_STAGES: frozenset[BusinessStatus] = frozenset({S.GATED, S.DOMAIN_PENDING, S.LIVE})
 
 TERMINAL: frozenset[BusinessStatus] = frozenset({S.DONE, S.REJECTED})
 RETRYABLE_STAGES: frozenset[BusinessStatus] = frozenset(
@@ -184,9 +187,13 @@ def record_event(
     reason: str | None,
     version_ref: str | None = None,
     details: dict | None = None,
-) -> None:
-    """Audit a non-transition event (e.g. an assumption edit). Status is unchanged. No commit."""
-    _audit(
+    key: str | None = None,
+) -> bool:
+    """Audit a non-transition event (e.g. an assumption edit). Status is unchanged. No commit.
+
+    `key` is an optional idempotency key; returns False if that key was already recorded.
+    """
+    return _audit(
         session,
         business,
         actor=actor,
@@ -195,7 +202,7 @@ def record_event(
         version_ref=version_ref,
         from_status=business.status,
         to_status=business.status,
-        key=f"{business.id}:event:{uuid.uuid4().hex}",
+        key=key or f"{business.id}:event:{uuid.uuid4().hex}",
         details=details,
     )
 
@@ -215,9 +222,13 @@ def record_creation(session: Session, business: Business, actor: Actor) -> None:
     )
 
 
-def _key(business: Business, current: str, target: str) -> str:
-    # `attempts` (failure count) separates repeats of the same edge after a retry.
-    return f"{business.id}:{current}->{target}:{business.attempts}"
+def _key(business: Business, current: str, target: str, ref: str | None = None) -> str:
+    # `attempts` (failure count) separates repeats of the same edge after a retry. `ref` is a
+    # stable identity of the logical transition (e.g. "site:<site_version_id>") for edges a
+    # business can legitimately take more than once without failing in between, such as
+    # DEPLOYING -> LIVE for each new site version. Without a ref the key is unchanged (M1-M4A).
+    base = f"{business.id}:{current}->{target}:{business.attempts}"
+    return f"{base}:{ref}" if ref else base
 
 
 def transition(
@@ -231,8 +242,13 @@ def transition(
     version_ref: str | None = None,
     expected_from: BusinessStatus | None = None,
     worker_id: str | None = None,
+    key_ref: str | None = None,
 ) -> Business:
     """Move a business to `to_status` and write the audit row. Does not commit.
+
+    key_ref: stable identity of this logical transition, added to the idempotency key so
+    distinct lifecycles of the same edge do not collide while a duplicate execution of the
+    same one is still refused (StaleState). Never random.
 
     expected_from: raise StaleState unless the business is currently in that status
     (guards against duplicate execution of an already-completed stage).
@@ -260,7 +276,7 @@ def transition(
         version_ref=version_ref,
         from_status=current,
         to_status=to_status,
-        key=_key(business, current, to_status),
+        key=_key(business, current, to_status, key_ref),
     )
     if not inserted:
         raise StaleState(f"Transition {current} -> {to_status} already recorded for {business_id}")

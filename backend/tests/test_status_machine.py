@@ -224,3 +224,35 @@ def test_concurrent_transitions_apply_once(
         )
         == 1
     )
+
+
+def test_key_ref_separates_distinct_lifecycles_but_not_duplicates(session: Session) -> None:
+    biz = make(session, S.DEPLOYING)
+    session.commit()
+    sm.transition(session, biz.id, S.LIVE, actor=Actor.user(), action="a", key_ref="site:1")
+    session.commit()
+    # A new lifecycle of the same edge (another site version) is allowed...
+    biz.status = S.DEPLOYING
+    session.commit()
+    sm.transition(session, biz.id, S.LIVE, actor=Actor.user(), action="a", key_ref="site:2")
+    session.commit()
+    # ...but repeating either logical transition is refused and writes nothing.
+    for ref in ("site:1", "site:2"):
+        biz.status = S.DEPLOYING
+        session.commit()
+        with pytest.raises(sm.StaleState, match="already recorded"):
+            sm.transition(session, biz.id, S.LIVE, actor=Actor.user(), action="a", key_ref=ref)
+        session.rollback()
+    keys = session.scalars(
+        select(AuditLog.idempotency_key).where(AuditLog.to_status == S.LIVE)
+    ).all()
+    assert keys == [f"{biz.id}:DEPLOYING->LIVE:0:site:1", f"{biz.id}:DEPLOYING->LIVE:0:site:2"]
+
+
+def test_transition_keys_without_ref_are_unchanged(session: Session) -> None:
+    biz = make(session, S.INTAKE)
+    session.commit()
+    sm.transition(session, biz.id, S.PREMORTEM, actor=Actor.user(), action="a")
+    session.commit()
+    key = session.scalar(select(AuditLog.idempotency_key).where(AuditLog.to_status == S.PREMORTEM))
+    assert key == f"{biz.id}:INTAKE->PREMORTEM:0"
