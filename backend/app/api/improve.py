@@ -44,6 +44,7 @@ class EvalSummary(BaseModel):
     d_score: float | None
     d_se: float | None
     completed_runs: int | None = None
+    expected_runs: int | None = None  # actual personas x repeats of the (shared) panel
 
 
 class AttemptOut(BaseModel):
@@ -101,6 +102,7 @@ def _summary(session: Session, eid: uuid.UUID | None) -> EvalSummary | None:
         d_score=float(ev.d_score) if complete and ev.d_score is not None else None,
         d_se=float(ev.d_se) if complete and ev.d_se is not None else None,
         completed_runs=done,
+        expected_runs=ev.expected_runs,
     )
 
 

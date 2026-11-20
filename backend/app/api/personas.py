@@ -67,7 +67,8 @@ class ResultsOut(_Simulated):
     site_version: int | None = None
     status: str  # not_started | queued | running | complete | incomplete
     completed_runs: int = 0
-    expected_runs: int = arena.EXPECTED_RUNS
+    persona_count: int = 0  # actual simulated personas in the panel
+    expected_runs: int = 0  # actual personas x repeats, set from the evaluation
     d_score: float | None = None
     d_se: float | None = None
     comparable_key: dict[str, Any] | None = None
@@ -216,6 +217,7 @@ def get_results(
         site_version=sv.version,
         status=ev.status,
         completed_runs=len(runs),
+        persona_count=len(panel.personas_json or []),
         expected_runs=ev.expected_runs,
         d_score=float(ev.d_score) if complete and ev.d_score is not None else None,
         d_se=float(ev.d_se) if complete and ev.d_se is not None else None,

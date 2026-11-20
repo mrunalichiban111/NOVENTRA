@@ -67,7 +67,9 @@ class FakeArenaLLM:
         fail: set[tuple[str, ...]] | None = None,
         delay: float = 0.02,
         reward_marker: str | None = None,
+        panel_size: int = 30,
     ) -> None:
+        self.panel_size = panel_size  # number of fixture personas the fake panel call returns
         self.reward_marker = reward_marker  # page text that makes even personas convert too
         self.calls: list[dict[str, Any]] = []
         self.fail = fail or set()  # frozensets of persona-id tuples to fail
@@ -87,7 +89,9 @@ class FakeArenaLLM:
         try:
             time.sleep(self.delay)
             if task == "persona_panel":
-                data = PersonaPanelOut.model_validate(_panel_data())
+                raw = _panel_data()
+                raw["personas"] = raw["personas"][-self.panel_size :]  # keeps the weak tail
+                data = PersonaPanelOut.model_validate(raw)
                 return StructuredResult(data=data, model="fake-strong", provider="fake")
             ids = persona_ids(prompt)
             if tuple(ids) in self.fail:

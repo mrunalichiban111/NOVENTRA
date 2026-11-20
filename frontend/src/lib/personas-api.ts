@@ -64,6 +64,7 @@ export interface Results {
   site_version: number | null;
   status: "not_started" | "queued" | "running" | "complete" | "incomplete";
   completed_runs: number;
+  persona_count: number;
   expected_runs: number;
   d_score: number | null;
   d_se: number | null;

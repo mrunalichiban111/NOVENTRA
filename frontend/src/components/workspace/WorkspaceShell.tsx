@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Loading, Notice } from "../Page";
 import ui from "../ui.module.css";
 import StageNav from "./StageNav";
 import { useWorkspace } from "./WorkspaceProvider";
@@ -17,8 +18,8 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
       </header>
       <StageNav />
       <main className={styles.content}>
-        {!business && !error && <p className={ui.muted}>Loading…</p>}
-        {error && <p className={ui.error} role="alert">{error}</p>}
+        {!business && !error && <Loading>Loading your workspace…</Loading>}
+        {error && <Notice tone="error" title="We couldn’t load this business">{error}</Notice>}
         {business && children}
       </main>
     </div>

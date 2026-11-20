@@ -8,18 +8,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError } from "@/lib/api";
 import { evaluateSite, generatePanel, getPanel, getResults, type Panel, type PersonaResult, type Results } from "@/lib/personas-api";
+import { objectionLabel, sectionLabel } from "@/lib/improve-labels";
+import { EmptyState, Loading, Notice, PageHeader, SectionHead } from "../Page";
 import ui from "../ui.module.css";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import styles from "./personas.module.css";
 
 const POLL_MS = 2000;
-const SECTION: Record<string, string> = {
-  header: "Header", hero: "Hero", problem: "Problem", offer: "Offer", how_it_works: "How it works",
-  proof: "About / proof", pricing: "Pricing", faq: "FAQ", cta: "Sign-up", footer: "Footer", none: "Whole page",
-};
-const OBJECTION: Record<string, string> = {
-  missing_info: "Missing information", price: "Price", trust: "Trust", fit: "Not a fit", clarity: "Unclear", other: "Other",
-};
 const ERROR_TEXT: Record<string, string> = {
   evaluator_unavailable: "The evaluation model (Claude Haiku) did not answer for some personas. Completed results are kept; retry runs only the missing ones.",
   budget_exceeded: "The AI spending limit was reached. Completed results are kept; try again later.",
@@ -36,8 +31,13 @@ function message(e: unknown, fallback: string): string {
 function Card({ p }: { p: PersonaResult }) {
   const last = p.runs[p.runs.length - 1];
   const converts = p.runs.filter((r) => r.decision === "convert").length;
-  const state = p.completed === 0 ? styles.cardPending : converts * 2 >= p.completed ? styles.cardConvert : styles.cardBounce;
-  const verdict = p.completed === 0 ? "Waiting" : `${converts}/${p.completed} convert`;
+  const state = p.completed === 0 ? styles.cardPending
+    : converts === p.completed ? styles.cardConvert
+    : converts === 0 ? styles.cardBounce : styles.cardMixed;
+  const tone = p.completed === 0 ? "Not evaluated yet"
+    : converts === p.completed ? "Would sign up"
+    : converts === 0 ? "Would leave" : "Mixed";
+  const verdict = p.completed === 0 ? tone : `${tone} (${converts} of ${p.completed} evaluations)`;
   return (
     <li className={`${styles.card} ${state}`} aria-label={`${p.name ?? p.persona_id}: ${verdict}`}>
       <div className={styles.cardHead}>
@@ -50,8 +50,9 @@ function Card({ p }: { p: PersonaResult }) {
           ))}
         </span>
       </div>
+      <span className={styles.cardVerdict}>{verdict}</span>
       <span className={styles.cardMeta}>{p.segment}{p.fit && p.fit !== "target" ? ` · ${p.fit.replace("_", "-")} fit` : ""}</span>
-      <span className={styles.cardReason}>{last ? last.reason : "Not evaluated yet"}</span>
+      <span className={styles.cardReason}>{last ? `“${last.reason}”` : "Waiting for this persona’s evaluation."}</span>
     </li>
   );
 }
@@ -103,74 +104,80 @@ export default function PersonaArena() {
 
   const live = business && business.domain && ["LIVE", "TESTING", "IMPROVING", "DONE"].includes(business.status);
   const done = results?.completed_runs ?? 0;
-  const expected = results?.expected_runs ?? 90;
+  const panelCount = panel?.count ?? results?.persona_count ?? 0;
+  const expected = results?.expected_runs || 0;
+  const repeats = panelCount > 0 && expected > 0 ? Math.round(expected / panelCount) : 0;
 
   return (
     <div>
-      <h1 className={ui.h1} style={{ fontSize: 22 }}>Persona Arena</h1>
+      <PageHeader
+        eyebrow="Stage 4"
+        title="Persona Arena"
+        lead="See how simulated customers react to your live page, and which parts make them hesitate."
+      />
       <p className={styles.banner} role="note">
         <span className={styles.bannerTitle}>Simulated results</span>
-        <span>30 AI-simulated customers read your live page. This is a simulation to find weak spots, not market research.</span>
+        <span>{panelCount > 0 ? `${panelCount} AI-simulated customers read` : "AI-simulated customers read"} your live page. This is a simulation to find weak spots, not market research or real demand.</span>
       </p>
 
-      {error && <div className={ui.error} role="alert">{error}</div>}
+      {error && <Notice tone="error">{error}</Notice>}
 
       {!live && (
-        <p className={ui.muted} role="status">
-          The arena tests your live website. <Link href={`/b/${id}/website`}>Launch your website</Link> first.
-        </p>
+        <EmptyState title="Your website needs to be live first">
+          The arena tests your live page. <Link href={`/b/${id}/website`} style={{ textDecoration: "underline" }}>Launch your website</Link>, then come back.
+        </EmptyState>
       )}
 
       {live && panel && (
         <section className={styles.section} aria-labelledby="panel-h">
-          <h2 id="panel-h" className={ui.h2}>1. Simulated customer panel</h2>
+          <SectionHead id="panel-h" step={1} title="Simulated customer panel" />
           {panel.status === "none" && (
             <>
-              <p className={ui.muted}>Create one panel of 30 simulated customers for this business. It is reused for every version of your page.</p>
+              <p className={ui.muted}>Create one panel of simulated customers for this business: a mix of ideal, nearby and weak-fit buyers. The same panel is reused for every version of your page, so scores stay comparable.</p>
               <div className={ui.actions}>
                 <button className={ui.button} disabled={busy} onClick={() => act(() => generatePanel(id), "Could not start the panel.")}>Create simulated panel</button>
               </div>
             </>
           )}
           {(panel.status === "pending" || panel.status === "generating") && (
-            <p role="status"><span className={styles.spinner} aria-hidden="true" />Creating 30 simulated personas…</p>
+            <Loading>Creating your simulated customers. This can take a minute.</Loading>
           )}
           {panel.status === "failed" && (
             <>
-              <p className={ui.error} role="alert">Panel creation failed: {panel.error}</p>
+              <Notice tone="error" title="We couldn’t create the panel">{panel.error}</Notice>
               <div className={ui.actions}>
                 <button className={ui.button} disabled={busy} onClick={() => act(() => generatePanel(id), "Could not retry.")}>Try again</button>
               </div>
             </>
           )}
-          {panel.status === "ready" && <p className={ui.muted}>{panel.count} simulated personas ready (mix of target, adjacent and weak-fit customers).</p>}
+          {panel.status === "ready" && <p className={ui.muted}>{panel.count} simulated personas ready (a mix of target, adjacent and weak-fit customers).</p>}
         </section>
       )}
 
       {live && panel?.status === "ready" && results && (
         <section className={styles.section} aria-labelledby="eval-h">
-          <h2 id="eval-h" className={ui.h2}>2. Simulated evaluation{results.site_version ? ` of site v${results.site_version}` : ""}</h2>
+          <SectionHead id="eval-h" step={2} title={`Simulated evaluation${results.site_version ? ` of site version ${results.site_version}` : ""}`} />
           {results.status === "not_started" && (
             <>
-              <p className={ui.muted}>Each persona reads the page text 3 times (90 simulated evaluations, Claude Haiku).</p>
+              <p className={ui.muted}>Each of the {panelCount} simulated personas reads your page text{repeats > 1 ? ` ${repeats} times` : ""}, for {expected > 0 ? expected : "several"} simulated evaluations in total.</p>
               <div className={ui.actions}>
                 <button className={ui.button} disabled={busy} onClick={() => act(() => evaluateSite(id), "Could not start the evaluation.")}>Run simulated evaluation</button>
               </div>
             </>
           )}
           {(results.status === "queued" || results.status === "running") && (
-            <div role="status" aria-live="polite">
-              <p><span className={styles.spinner} aria-hidden="true" />Evaluating… {done} of {expected} simulated evaluations done</p>
+            <div aria-live="polite">
+              <Loading>Evaluating your page: {done} of {expected > 0 ? expected : "?"} simulated evaluations done.</Loading>
               <div className={styles.progressBar} aria-hidden="true">
-                <div className={styles.progressFill} style={{ width: `${Math.round((100 * done) / expected)}%` }} />
+                <div className={styles.progressFill} style={{ width: `${expected > 0 ? Math.round((100 * done) / expected) : 0}%` }} />
               </div>
             </div>
           )}
           {results.status === "incomplete" && (
             <>
-              <p className={ui.error} role="alert">
-                Incomplete: {done} of {expected} done. {ERROR_TEXT[results.error_code ?? ""] ?? results.error} No demand score is shown for an incomplete run.
-              </p>
+              <Notice tone="warn" title="Evaluation incomplete">
+                {done} of {expected} simulated evaluations finished. {ERROR_TEXT[results.error_code ?? ""] ?? results.error} No demand score is shown for an incomplete run.
+              </Notice>
               {results.retryable && (
                 <div className={ui.actions}>
                   <button className={ui.button} disabled={busy} onClick={() => act(() => evaluateSite(id, results.site_version ?? undefined), "Could not retry.")}>Retry missing evaluations</button>
@@ -182,14 +189,24 @@ export default function PersonaArena() {
             <>
               <div className={styles.scoreRow}>
                 <div className={styles.score}>
-                  <div className={styles.scoreLabel}>Simulated demand score D</div>
+                  <div className={styles.scoreLabel}>Simulated demand score</div>
                   <div className={styles.scoreValue}>{results.d_score.toFixed(1)}</div>
-                  <div className={styles.scoreSub}>± {results.d_se?.toFixed(1)} SE · {results.converted} of {expected} converted</div>
+                  <div className={styles.scoreSub}>± {results.d_se?.toFixed(1)} margin of error · {results.converted} of {expected} evaluations ended in a sign-up</div>
                 </div>
               </div>
+              <dl className={styles.explain}>
+                <div>
+                  <dt>What the demand score means</dt>
+                  <dd>How readily the simulated customers chose to sign up after reading your page. Higher is better. It compares versions of your page; it does not predict real sales.</dd>
+                </div>
+                <div>
+                  <dt>What the margin of error means</dt>
+                  <dd>How much the score could move if the same test were run again. A small difference between two versions may just be noise.</dd>
+                </div>
+              </dl>
               <p className={styles.note}>{results.note}</p>
               <div className={ui.actions}>
-                <Link href={`/b/${id}/improve`} className={ui.button}>Improve the page</Link>
+                <Link href={`/b/${id}/improve`} className={ui.button}>Find improvements for this page</Link>
               </div>
             </>
           )}
@@ -198,13 +215,13 @@ export default function PersonaArena() {
 
       {live && results && results.objections.length > 0 && (
         <section className={styles.section} aria-labelledby="obj-h">
-          <h2 id="obj-h" className={ui.h2}>Top simulated objections</h2>
+          <SectionHead id="obj-h" title="What held simulated customers back" help="The most common concerns, with an example of what a simulated customer said. The big number is how many times it came up." />
           <ol className={styles.objections}>
             {results.objections.slice(0, 5).map((o) => (
               <li key={`${o.objection_type}-${o.section}`} className={styles.objection}>
                 <span className={styles.objCount} aria-label={`${o.count} mentions`}>{o.count}</span>
-                <span className={styles.objTitle}>{OBJECTION[o.objection_type] ?? o.objection_type} · {SECTION[o.section] ?? o.section}</span>
-                <span className={styles.objExample}>“{o.example || "—"}” · {o.personas} personas, {o.bounces} bounces</span>
+                <span className={styles.objTitle}>{objectionLabel(o.objection_type)} · {sectionLabel(o.section)}</span>
+                <span className={styles.objExample}>“{o.example || "—"}” · raised by {o.personas} persona{o.personas === 1 ? "" : "s"}, {o.bounces} left the page</span>
               </li>
             ))}
           </ol>
@@ -213,7 +230,8 @@ export default function PersonaArena() {
 
       {live && results && results.personas.length > 0 && (
         <section className={styles.section} aria-labelledby="cards-h">
-          <h2 id="cards-h" className={ui.h2}>Simulated personas</h2>
+          <SectionHead id="cards-h" title="Individual simulated customers" />
+          <p className={styles.legend}><span>Green: would sign up</span><span>Amber: mixed</span><span>Red: would leave</span><span>Dashed: not evaluated yet</span></p>
           <ul className={styles.grid}>
             {results.personas.map((p) => <Card key={p.persona_id} p={p} />)}
           </ul>

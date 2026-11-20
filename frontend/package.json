@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/lib/api-response.test.mjs"
+    "test": "node --test src/lib/api-response.test.mjs src/lib/improve-labels.test.mjs"
   },
   "dependencies": {
     "next": "16.4.6",

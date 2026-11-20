@@ -6,13 +6,13 @@ export default function Scorecard({ business }: { business: Business }) {
   const sc = business.scorecard;
   if (!sc) return null;
   const tiles = [
-    { label: "Economics (E)", value: sc.economics, sub: "Simulated chance of positive cash by month 6" },
-    { label: "Risk (R)", value: sc.risk, sub: "Higher is safer. From model-rated risks" },
+    { label: "Economics", value: sc.economics, sub: "Simulated chance of positive cash by month 6" },
+    { label: "Risk safety", value: sc.risk, sub: "Higher is safer. From model-rated risks" },
     { label: "Overall", value: sc.overall, sub: "0.58 × E + 0.42 × R" },
   ];
   return (
     <section className={ui.card} aria-label="Pre-launch scorecard">
-      <h2 className={ui.h2}>Pre-launch scorecard (version {sc.version})</h2>
+      <h2 className={ui.h2}>Verdict and scores (version {sc.version})</h2>
       <div className={ui.verdictHead}>
         <span className={`${ui.badge} ${ui[sc.verdict]}`}>{VERDICT_LABEL[sc.verdict]}</span>
         <span className={ui.muted}>Verdict</span>

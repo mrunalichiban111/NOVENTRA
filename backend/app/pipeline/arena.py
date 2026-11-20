@@ -39,7 +39,7 @@ from app.deploy.site_model import site_links
 from app.deploy.visible_text import extract_visible_text, page_text
 from app.finance.scoring import RUBRIC_VERSION, demand_score, display_score
 from app.llm.base import BudgetExceeded, ConfigError, LLMError
-from app.llm.schemas import PANEL_SIZE, PersonaEvaluation, WebsiteContent
+from app.llm.schemas import PersonaEvaluation, WebsiteContent
 from app.llm.structured import run_structured
 from app.models import (
     Business,
@@ -60,7 +60,13 @@ logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 10
 REPEATS = 3
-EXPECTED_RUNS = PANEL_SIZE * REPEATS  # 90
+
+
+def expected_runs_for(panel: Any) -> int:
+    """Evaluations expected for a panel: actual persona count x repeats (never a fixed 90)."""
+    return len(panel.personas_json or []) * REPEATS
+
+
 MAX_WORKERS = 5  # concurrency cap for persona calls
 EXTRA_ROUNDS = 2  # retries of still-missing combinations inside one job
 EVAL_LEASE_S = 600
@@ -229,7 +235,7 @@ def request_evaluation(
             panel_id=panel.id,
             site_version_id=sv.id,
             status="queued",
-            expected_runs=EXPECTED_RUNS,
+            expected_runs=expected_runs_for(panel),
         )
         session.add(existing)
         session.flush()

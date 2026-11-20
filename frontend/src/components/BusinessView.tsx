@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { retryBusiness } from "@/lib/api";
 import AssumptionsTable from "./AssumptionsTable";
 import PreMortem from "./PreMortem";
+import { Notice, PageHeader } from "./Page";
 import Scenarios from "./Scenarios";
 import Scorecard from "./Scorecard";
 import Tracker from "./Tracker";
@@ -35,15 +36,14 @@ export default function BusinessView() {
 
       {business && (
         <>
-          <h1 className={ui.h1} style={{ fontSize: 22 }}>Your assessment</h1>
-          <p className={ui.muted} style={{ marginBottom: 20 }}>{business.idea_text}</p>
+          <PageHeader eyebrow="Stage 1" title="Your assessment" lead={business.idea_text} />
 
           <Tracker business={business} />
 
           {business.status === "FAILED" && (
             <div className={ui.card}>
               <h2 className={ui.h2}>Something went wrong</h2>
-              <p className={ui.error}>{business.pipeline.last_error ?? "The analysis failed."}</p>
+              <Notice tone="error">{business.pipeline.last_error ?? "The analysis failed."}</Notice>
               <div className={ui.actions}>
                 {business.pipeline.retryable ? (
                   <button className={ui.button} onClick={retry}>Retry from where it stopped</button>

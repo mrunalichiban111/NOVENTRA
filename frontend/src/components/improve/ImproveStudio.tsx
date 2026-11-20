@@ -9,8 +9,10 @@ import { useEffect, useState } from "react";
 import { ApiError } from "@/lib/api";
 import {
   answerQuestion, approveItems, discardDraft, generateProposal, getAttempt, promoteDraft,
-  rejectProposal, rollbackSite, startAttempt, type Attempt, type Classification, type EvalSummary,
+  rejectProposal, rollbackSite, startAttempt, type Attempt, type Classification, type EvalSummary, type ProposalItem,
 } from "@/lib/improve-api";
+import { fieldLabel, objectionLabel, sectionLabel } from "@/lib/improve-labels";
+import { EmptyState, Loading, Notice, PageHeader, SectionHead } from "../Page";
 import styles from "../personas/personas.module.css";
 import ui from "../ui.module.css";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -18,11 +20,16 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 const POLL_MS = 2500;
 const CLASS_LABEL: Record<Classification, string> = {
   SAFE_AUTOMATIC: "Wording only",
-  FOUNDER_INPUT_REQUIRED: "Needs your facts",
+  FOUNDER_INPUT_REQUIRED: "Uses facts you provide",
   APPROVAL_REQUIRED: "Needs your approval",
 };
+const CLASS_TONE: Record<Classification, string> = {
+  SAFE_AUTOMATIC: "",
+  FOUNDER_INPUT_REQUIRED: ui.pillWarn,
+  APPROVAL_REQUIRED: ui.pillBad,
+};
 const OUTCOME: Record<string, string> = {
-  promoted: "Promoted: the improved version is now live.",
+  promoted: "Done: the improved version is now live.",
   not_promoted: "Not promoted: your original page stays live.",
   discarded: "Draft discarded: your original page stays live.",
   rejected: "Proposal rejected: nothing changed.",
@@ -40,13 +47,15 @@ function msg(e: unknown, fallback: string) {
   return e instanceof ApiError || e instanceof Error ? e.message || fallback : fallback;
 }
 
+const isConsequential = (c: Classification) => c === "APPROVAL_REQUIRED";
+
 function Score({ label, e }: { label: string; e: EvalSummary | null }) {
   return (
     <div className={styles.score}>
-      <div className={styles.scoreLabel}>{label}{e?.site_version ? ` (v${e.site_version})` : ""}</div>
+      <div className={styles.scoreLabel}>{label}{e?.site_version ? ` (version ${e.site_version})` : ""}</div>
       <div className={styles.scoreValue}>{e?.d_score != null ? e.d_score.toFixed(1) : "—"}</div>
       <div className={styles.scoreSub}>
-        {e?.d_score != null ? `± ${e.d_se?.toFixed(1)} SE` : e?.status === "complete" ? "" : `${e?.completed_runs ?? 0} of 90 done`}
+        {e?.d_score != null ? `± ${e.d_se?.toFixed(1)} margin of error` : e?.status === "complete" ? "" : `${e?.completed_runs ?? 0} of ${e?.expected_runs ?? "?"} simulated evaluations done`}
       </div>
     </div>
   );
@@ -97,34 +106,75 @@ export default function ImproveStudio() {
   const needsApproval = selected.some((i) => i.classification === "APPROVAL_REQUIRED");
   const unanswered = (a?.questions ?? []).filter((q) => !a?.answers[q.id]);
 
+  const changeCard = (i: ProposalItem) => {
+    const on = isChosen(i.id, i.classification);
+    const cid = `chg-${i.id}`;
+    return (
+      <li key={i.id} className={`${styles.change} ${on ? styles.changeOn : ""}`}>
+        <div className={styles.changeHead}>
+          <input id={cid} type="checkbox" checked={on}
+            onChange={(e) => setChosen({ ...chosen, [i.id]: e.target.checked })} />
+          <label htmlFor={cid} className={styles.changeTitle}>{fieldLabel(i.path)}</label>
+          <span className={`${ui.pill} ${CLASS_TONE[i.classification]}`}>{CLASS_LABEL[i.classification]}</span>
+        </div>
+        <p className={ui.small + " " + ui.muted}>Section: {sectionLabel(i.section)}</p>
+        <div className={ui.compare}>
+          <div className={ui.compareSide}>
+            <p className={ui.compareLabel}>Current text</p>
+            <p>{i.old || "—"}</p>
+          </div>
+          <div className={`${ui.compareSide} ${ui.compareAfter}`}>
+            <p className={ui.compareLabel}>Suggested text</p>
+            <p><strong>{i.new}</strong></p>
+          </div>
+        </div>
+        <p className={ui.small}><span className={ui.muted}>Why: </span>{i.rationale}</p>
+        {isConsequential(i.classification) && !on && (
+          <p className={ui.whyDisabled}>Not included by default. Tick it to include this pricing, plan or guarantee change.</p>
+        )}
+      </li>
+    );
+  };
+  const contentItems = items.filter((i) => !isConsequential(i.classification));
+  const consequentialItems = items.filter((i) => isConsequential(i.classification));
+  const buildBlocked = selected.length === 0
+    ? "Select at least one change to build a draft."
+    : needsApproval && !consequentialOk
+      ? "Tick the approval box above to include pricing, plan or guarantee changes."
+      : null;
+
   return (
     <div>
-      <h1 className={ui.h1} style={{ fontSize: 22 }}>Improvement Studio</h1>
+      <PageHeader
+        eyebrow="Stage 5"
+        title="Improvement Studio"
+        lead="See what simulated customers pushed back on, review suggested edits, and test a draft against your live page."
+      />
       <p className={styles.banner} role="note">
         <span className={styles.bannerTitle}>Simulated results</span>
-        <span>Changes are prepared as a draft and tested on the same simulated panel. Nothing goes live without your click and a gain of at least 3 points.</span>
+        <span>Changes are prepared as a draft and tested on the same simulated panel. Nothing goes live without your click and a gain of at least {a?.threshold ?? 3} points.</span>
       </p>
-      {error && <div className={ui.error} role="alert">{error}</div>}
-      {!a && !error && <p className={ui.muted} role="status">Loading…</p>}
+      {error && <Notice tone="error">{error}</Notice>}
+      {!a && !error && <Loading>Loading your improvement workspace…</Loading>}
 
       {a && (a.status === "none" || OUTCOME[a.status]) && (
         <section className={styles.section} aria-labelledby="start-h">
-          <h2 id="start-h" className={ui.h2}>{a.status === "none" ? "Start" : "Result"}</h2>
+          <SectionHead id="start-h" title={a.status === "none" ? "Start improving" : "Result"} />
           {OUTCOME[a.status] && (
-            <p role="status" style={{ fontWeight: 600 }}>
+            <Notice tone={a.status === "promoted" ? "success" : "info"}>
               {OUTCOME[a.status]} {a.reason && REASON[a.reason] ? REASON[a.reason] : ""}
-            </p>
+            </Notice>
           )}
           {a.status === "promoted" && a.source_version && (
-            <p className={ui.muted} style={{ marginTop: 8 }}>
-              Changed your mind? <button className={`${ui.button} ${ui.ghost}`} disabled={busy}
-                onClick={() => act(() => rollbackSite(id, a.source_version!), "Rollback failed.")}>Roll back to v{a.source_version}</button>
+            <p className={ui.muted} style={{ marginBottom: 12 }}>
+              Changed your mind? <button className={`${ui.button} ${ui.secondary} ${ui.buttonSm}`} disabled={busy}
+                onClick={() => act(() => rollbackSite(id, a.source_version!), "Rollback failed.")}>Roll back to version {a.source_version}</button>
             </p>
           )}
-          <p className={ui.muted} style={{ marginTop: 8 }}>Uses the latest complete simulated evaluation of your live page. <Link href={`/b/${id}/personas`}>Persona Arena</Link></p>
+          <p className={ui.sectionHelp}>Uses the latest complete simulated evaluation of your live page. If you haven’t run one yet, start in the <Link href={`/b/${id}/personas`} style={{ textDecoration: "underline" }}>Persona Arena</Link>.</p>
           <div className={ui.actions}>
             <button className={ui.button} disabled={busy} onClick={() => act(() => startAttempt(id), "Could not start.")}>
-              {a.status === "none" ? "Find improvements" : "Start a new improvement"}
+              {busy ? "Starting…" : a.status === "none" ? "Find improvements" : "Start a new improvement round"}
             </button>
           </div>
         </section>
@@ -132,12 +182,16 @@ export default function ImproveStudio() {
 
       {a && a.opportunities.length > 0 && !OUTCOME[a.status] && (
         <section className={styles.section} aria-labelledby="opp-h">
-          <h2 id="opp-h" className={ui.h2}>1. Opportunities (from {a.original?.completed_runs ?? 90} simulated evaluations)</h2>
+          <SectionHead id="opp-h" step={1} title="What simulated customers pushed back on"
+            help={`Based on ${a.original?.completed_runs ?? 0} of ${a.original?.expected_runs ?? "?"} simulated evaluations of your live page. The number is how many times the concern came up.`} />
           <ol className={styles.objections}>
             {a.opportunities.map((o) => (
               <li key={o.id} className={styles.objection}>
                 <span className={styles.objCount} aria-label={`${o.evidence_count} mentions`}>{o.evidence_count}</span>
-                <span className={styles.objTitle}>{o.objection_type.replace("_", " ")} · {o.section.replace(/_/g, " ")} · <em>{CLASS_LABEL[o.classification]}</em></span>
+                <span className={styles.objTitle}>
+                  {objectionLabel(o.objection_type)} · {sectionLabel(o.section)}{" "}
+                  <span className={`${ui.pill} ${CLASS_TONE[o.classification]}`}>{CLASS_LABEL[o.classification]}</span>
+                </span>
                 <span className={styles.objExample}>“{o.example || "—"}”</span>
               </li>
             ))}
@@ -147,8 +201,9 @@ export default function ImproveStudio() {
 
       {a?.status === "awaiting_answers" && (
         <section className={styles.section} aria-labelledby="q-h">
-          <h2 id="q-h" className={ui.h2}>2. A few facts only you know</h2>
-          {a.questions.length === 0 && <p className={ui.muted}>No facts needed for these changes.</p>}
+          <SectionHead id="q-h" step={2} title="A few facts only you know"
+            help="We never invent facts. Answer what you can; anything you leave undecided stays unchanged on your page." />
+          {a.questions.length === 0 && <EmptyState title="No facts needed">These changes don’t depend on anything only you know.</EmptyState>}
           <div className={ui.form}>
             {a.questions.map((q) => {
               const saved = a.answers[q.id];
@@ -160,9 +215,9 @@ export default function ImproveStudio() {
                   <div className={ui.actions}>
                     <button className={ui.button} disabled={busy || !(drafts[q.id] ?? "").trim()}
                       onClick={() => act(() => answerQuestion(id, q.id, drafts[q.id], false), "Could not save.")}>Save answer</button>
-                    <button className={`${ui.button} ${ui.ghost}`} disabled={busy}
-                      onClick={() => act(() => answerQuestion(id, q.id, null, true), "Could not save.")}>Not decided yet</button>
-                    {saved && <span className={ui.small} role="status">Saved: {saved.status === "answered" ? "answered" : "not decided (section left unchanged)"}</span>}
+                    <button className={`${ui.button} ${ui.secondary}`} disabled={busy}
+                      onClick={() => act(() => answerQuestion(id, q.id, null, true), "Could not save.")}>Skip this question</button>
+                    {saved && <span className={ui.small} role="status">{saved.status === "answered" ? "Answer saved" : "Skipped: this part of your page stays as it is"}</span>}
                   </div>
                 </div>
               );
@@ -171,61 +226,66 @@ export default function ImproveStudio() {
           <div className={ui.actions}>
             <button className={ui.button} disabled={busy || unanswered.length > 0}
               onClick={() => act(() => generateProposal(id), "Could not prepare changes.")}>
-              {busy ? "Preparing…" : "Prepare proposed changes"}
+              {busy ? "Preparing suggestions…" : "Prepare suggested changes"}
             </button>
-            {unanswered.length > 0 && <span className={ui.small}>{unanswered.length} question(s) left</span>}
+            {unanswered.length > 0 && <span className={ui.whyDisabled}>Answer or skip {unanswered.length} more question{unanswered.length === 1 ? "" : "s"} to continue.</span>}
           </div>
         </section>
       )}
 
       {a?.status === "proposed" && (
         <section className={styles.section} aria-labelledby="p-h">
-          <h2 id="p-h" className={ui.h2}>3. Proposed changes</h2>
-          <ul className={styles.objections}>
-            {items.map((i) => (
-              <li key={i.id} className={styles.card}>
-                <label style={{ display: "flex", gap: 8, alignItems: "baseline", fontWeight: 600 }}>
-                  <input type="checkbox" checked={isChosen(i.id, i.classification)}
-                    onChange={(e) => setChosen({ ...chosen, [i.id]: e.target.checked })} />
-                  {i.path} · {CLASS_LABEL[i.classification]}
-                </label>
-                <span className={styles.cardMeta}>Before</span>
-                <del className={styles.cardReason}>{i.old}</del>
-                <span className={styles.cardMeta}>After</span>
-                <ins className={styles.cardReason} style={{ textDecoration: "none", fontWeight: 600 }}>{i.new}</ins>
-                <span className={styles.cardMeta}>{i.rationale}</span>
-              </li>
-            ))}
-          </ul>
+          <SectionHead id="p-h" step={3} title="Review suggested changes"
+            help="Tick the changes you want in the draft. Your live page is not touched yet: the draft is built and tested first." />
+          {items.length === 0 && <EmptyState title="No changes were suggested">Reject this round and try again later.</EmptyState>}
+          {contentItems.length > 0 && (
+            <>
+              <h3 className={ui.h3}>Content improvements</h3>
+              <ul className={styles.changes}>{contentItems.map(changeCard)}</ul>
+            </>
+          )}
+          {consequentialItems.length > 0 && (
+            <>
+              <h3 className={ui.h3}>Pricing, plan and guarantee changes</h3>
+              <Notice tone="warn" title="These need your explicit approval">
+                They affect what customers pay or are promised, so they are off by default.
+              </Notice>
+              <ul className={styles.changes}>{consequentialItems.map(changeCard)}</ul>
+            </>
+          )}
           {needsApproval && (
-            <label style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <label className={styles.approve}>
               <input type="checkbox" checked={consequentialOk} onChange={(e) => setConsequentialOk(e.target.checked)} />
-              I approve the price, plan or guarantee changes selected above.
+              <span>I’ve reviewed the pricing, plan or guarantee changes I ticked above and approve adding them to the draft. Nothing goes live until I promote the draft.</span>
             </label>
           )}
           <div className={ui.actions}>
-            <button className={ui.button} disabled={busy || selected.length === 0 || (needsApproval && !consequentialOk)}
+            <button className={ui.button} disabled={busy || !!buildBlocked}
               onClick={() => act(() => approveItems(id, selected.map((i) => i.id), consequentialOk), "Could not approve.")}>
-              Build and test a draft ({selected.length})
+              Build and test draft ({selected.length} change{selected.length === 1 ? "" : "s"})
             </button>
-            <button className={`${ui.button} ${ui.ghost}`} disabled={busy} onClick={() => act(() => rejectProposal(id), "Could not reject.")}>Reject all</button>
+            <button className={`${ui.button} ${ui.danger}`} disabled={busy} onClick={() => act(() => rejectProposal(id), "Could not reject.")}>Reject all suggestions</button>
+            {buildBlocked && <span className={ui.whyDisabled}>{buildBlocked}</span>}
           </div>
         </section>
       )}
 
       {a && ["approved_for_draft", "draft_built", "draft_evaluated"].includes(a.status) && (
         <section className={styles.section} aria-labelledby="d-h">
-          <h2 id="d-h" className={ui.h2}>4. Draft{a.draft_version ? ` v${a.draft_version}` : ""} vs your live page</h2>
-          {a.status === "approved_for_draft" && <p role="status"><span className={styles.spinner} aria-hidden="true" />Building the draft (your live page is not touched)…</p>}
-          {a.status === "draft_built" && <p role="status" aria-live="polite"><span className={styles.spinner} aria-hidden="true" />Testing the draft on the same simulated panel… {a.draft?.completed_runs ?? 0} of 90</p>}
+          <SectionHead id="d-h" step={4} title={`Draft${a.draft_version ? ` (version ${a.draft_version})` : ""} compared with your live page`}
+            help="Demand scores are simulated. The draft only replaces your live page if it scores clearly higher." />
+          {a.status === "approved_for_draft" && <Loading>Building the draft. Your live page is not touched.</Loading>}
+          {a.status === "draft_built" && (
+            <Loading>Testing the draft on the same simulated panel: {a.draft?.completed_runs ?? 0} of {a.draft?.expected_runs ?? "?"} simulated evaluations done.</Loading>
+          )}
           <div className={styles.scoreRow}>
-            <Score label="Live D" e={a.original} />
-            <Score label="Draft D" e={a.draft} />
+            <Score label="Live page demand score" e={a.original} />
+            <Score label="Draft demand score" e={a.draft} />
             {a.delta_demand != null && (
               <div className={styles.score}>
-                <div className={styles.scoreLabel}>Change</div>
+                <div className={styles.scoreLabel}>Difference</div>
                 <div className={styles.scoreValue}>{a.delta_demand > 0 ? "+" : ""}{a.delta_demand.toFixed(1)}</div>
-                <div className={styles.scoreSub}>needs ≥ +{a.threshold}</div>
+                <div className={styles.scoreSub}>needs at least +{a.threshold} to go live</div>
               </div>
             )}
           </div>
@@ -233,9 +293,9 @@ export default function ImproveStudio() {
           {a.status === "draft_evaluated" && (
             <div className={ui.actions}>
               <button className={ui.button} disabled={busy || a.promote_requested} onClick={() => act(() => promoteDraft(id), "Promotion refused.")}>
-                {a.promote_requested ? "Promoting…" : "Promote draft to live"}
+                {a.promote_requested ? "Making it live…" : "Make the draft live"}
               </button>
-              <button className={`${ui.button} ${ui.ghost}`} disabled={busy || a.promote_requested} onClick={() => act(() => discardDraft(id), "Could not discard.")}>Discard draft</button>
+              <button className={`${ui.button} ${ui.secondary}`} disabled={busy || a.promote_requested} onClick={() => act(() => discardDraft(id), "Could not discard.")}>Discard draft, keep my live page</button>
             </div>
           )}
         </section>

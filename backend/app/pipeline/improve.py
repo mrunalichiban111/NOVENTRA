@@ -747,7 +747,7 @@ def build_draft(session: Session, attempt: ImprovementAttempt, deps: Deps, worke
         panel_id=panel.id,
         site_version_id=sv.id,
         status="queued",
-        expected_runs=arena.EXPECTED_RUNS,
+        expected_runs=arena.expected_runs_for(panel),
     )
     session.add(ev)
     session.flush()

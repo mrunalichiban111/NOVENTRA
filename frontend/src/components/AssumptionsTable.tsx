@@ -58,8 +58,14 @@ export default function AssumptionsTable({
           : "These values feed the calculations."}{" "}
         “llm” means an AI estimate; treat it as unverified.
       </p>
-      <div className={ui.tableWrap}>
-        <table className={ui.table}>
+      <div className={ui.aWrap}>
+        <table className={ui.aTable}>
+          <colgroup>
+            <col className={ui.colName} />
+            {FIELDS.map((f) => <col key={f} className={ui.colNum} />)}
+            <col className={ui.colSrc} />
+            <col className={ui.colWhy} />
+          </colgroup>
           <thead>
             <tr>
               <th>Assumption</th>
@@ -73,12 +79,12 @@ export default function AssumptionsTable({
               const meta = ASSUMPTION_LABEL[a.key];
               return (
                 <tr key={a.key}>
-                  <td>
+                  <td className={ui.aName}>
                     {meta.name}
                     <div className={ui.small + " " + ui.muted}>{meta.unit}</div>
                   </td>
                   {FIELDS.map((f) => (
-                    <td key={f} className={ui.num}>
+                    <td key={f} className={ui.num} data-label={f[0].toUpperCase() + f.slice(1)}>
                       {editable ? (
                         <input
                           className={`${ui.cellInput} ${isEdited(a, f) ? ui.edited : ""}`}
@@ -91,14 +97,14 @@ export default function AssumptionsTable({
                           onChange={(e) => setDraft({ ...draft, [keyOf(a, f)]: e.target.value })}
                         />
                       ) : (
-                        a[f]
+                        <span className={ui.aValue}>{a[f]}</span>
                       )}
                     </td>
                   ))}
-                  <td>
+                  <td className={ui.aSrc} data-label="Source">
                     <span className={`${ui.src} ${a.source === "user" ? ui.srcUser : ""}`}>{a.source}</span>
                   </td>
-                  <td className={ui.small}>{a.rationale}</td>
+                  <td className={`${ui.small} ${ui.aWhy}`}>{a.rationale}</td>
                 </tr>
               );
             })}

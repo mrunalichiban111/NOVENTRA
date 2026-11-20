@@ -6,6 +6,7 @@ import { ApiError, retryBusiness } from "@/lib/api";
 import { getNames } from "@/lib/names-api";
 import { getDeployments, getSite, requestDeploy, type Deployment, type Site } from "@/lib/sites-api";
 import { websiteMode } from "@/lib/stages";
+import { Notice, PageHeader } from "../Page";
 import ui from "../ui.module.css";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import DeployProgress from "./DeployProgress";
@@ -184,7 +185,7 @@ export default function WebsiteStudio() {
   if (mode !== "ready") {
     return (
       <div>
-        <h1 className={ui.h1} style={{ fontSize: 22 }}>Website Launch</h1>
+        <PageHeader eyebrow="Stage 3" title="Website Launch" />
         {mode === "no_claim" ? (
           <>
             <p className={ui.muted} role="status">You have not claimed a name yet. Your website is published at the NOVENTRA address you claim in the Naming Studio.</p>
@@ -273,7 +274,7 @@ export default function WebsiteStudio() {
         {status === "DEPLOYING" && <DeployProgress business={business} site={site} deployments={deployments} />}
 
         {liveLike && (
-          <p className={styles.liveLine}>{liveSentence(site, loaded)}</p>
+          <Notice tone="success" title="Your website is live"><span className={styles.liveLine}>{liveSentence(site, loaded)}</span></Notice>
         )}
 
         {failed && business.pipeline.failed_stage !== "DEPLOYING" && (
@@ -292,9 +293,9 @@ export default function WebsiteStudio() {
 
         {failed && business.pipeline.failed_stage === "DEPLOYING" && (
           <>
-            <p className={ui.error}>
+            <Notice tone="error" title="Deployment failed">
               {business.pipeline.last_error ?? latestFailure?.error ?? "The deployment failed."}
-            </p>
+            </Notice>
             <p className={ui.muted} style={{ marginTop: 8 }}>
               The previous release, if there was one, stays in place, and your claimed name is unchanged.
             </p>

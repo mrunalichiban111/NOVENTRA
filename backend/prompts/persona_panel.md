@@ -12,10 +12,13 @@ Each persona is a plausible, specific person in the stated market:
 - hidden_objection: the doubt they would not say out loud (max 120 characters).
 - constraints: up to 2 practical limits (time, location, diet, family, budget), 80 characters each.
 
-Diversity rules (all required):
-- Mostly target and adjacent customers, but at least 4 personas with fit weak or non_target.
-- At least 5 personas with skepticism 4 or 5.
-- Spread budgets: at least 3 different budget tiers, no tier used by more than 12 personas.
-- Vary age, occupation, urgency and tech comfort. Avoid stereotypes and avoid copies of the same person.
+Diversity rules (all required; these targets are deliberately stricter than the minimum checks):
+- Aim for exactly 30 personas (never more than 30; a panel is only usable with at least 25, so do not stop early).
+- Count before you return: write the personas one after another, number them 1 to 30 in your head, make sure each number is used exactly once with no gap, and stop at 30. Do not pad with near-duplicates to reach 30. Do NOT output numbers or ids; the array holds 30 objects.
+- Mostly target and adjacent customers, but at least 5 personas with fit weak or non_target.
+- At least 6 personas with skepticism 4 or 5.
+- Spread budgets: at least 4 different budget_tier_inr values, and no tier used by more than 10 personas.
+- Every name unique. Vary age, occupation, urgency and tech comfort. Avoid stereotypes and avoid copies of the same person.
+- Respect every field limit above: hidden_objection max 120 characters, each constraint max 80, at most 2 constraints, name max 40, segment and occupation max 60.
 
 Do not include ids, statistics, real people, brands or links. Plain text only.

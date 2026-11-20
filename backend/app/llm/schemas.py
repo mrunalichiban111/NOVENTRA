@@ -225,7 +225,8 @@ OUTPUT_SCHEMAS: dict[str, type[BaseModel]] = {
 # --- Persona arena (M5: FR-AR-1, FR-AR-2, Appendix C) ---------------------------------------
 # Everything here is SIMULATED. Persona ids are assigned in Python (p01..p30), never by the model.
 
-PANEL_SIZE = 30
+PANEL_SIZE = 30  # target size; the model is asked for exactly this many
+MIN_PANEL_SIZE = 25  # smallest panel accepted (hackathon decision); never padded or invented
 BudgetTier = Literal["under_500", "500_2k", "2k_5k", "5k_15k", "over_15k"]
 Fit = Literal["target", "adjacent", "weak", "non_target"]
 ObjectionType = Literal["missing_info", "price", "trust", "fit", "clarity", "other"]
@@ -256,7 +257,7 @@ class Persona(_Out):
 
 
 class PersonaPanelOut(_Out):
-    personas: list[Persona] = Field(min_length=PANEL_SIZE, max_length=PANEL_SIZE)
+    personas: list[Persona] = Field(min_length=MIN_PANEL_SIZE, max_length=PANEL_SIZE)
 
     @model_validator(mode="after")
     def _diversity(self) -> "PersonaPanelOut":
@@ -266,17 +267,24 @@ class PersonaPanelOut(_Out):
         names = [p.name.strip().lower() for p in ps]
         if len(set(names)) != len(names):
             problems.append("persona names must be unique")
-        if sum(p.skepticism >= 4 for p in ps) < 5:
-            problems.append("at least 5 personas need skepticism 4 or 5")
-        if sum(p.fit in ("weak", "non_target") for p in ps) < 4:
-            problems.append("at least 4 personas must have fit 'weak' or 'non_target'")
+        # Thresholds scale with the actual panel size n (equal to 5 / 4 / 12 at n = 30).
+        n = len(ps)
+        min_skeptic = -(-n // 6)
+        min_weak = -(-2 * n // 15)
+        max_tier = (2 * n) // 5
+        if sum(p.skepticism >= 4 for p in ps) < min_skeptic:
+            problems.append(f"at least {min_skeptic} personas need skepticism 4 or 5")
+        if sum(p.fit in ("weak", "non_target") for p in ps) < min_weak:
+            problems.append(f"at least {min_weak} personas must have fit 'weak' or 'non_target'")
         tiers: dict[str, int] = {}
         for p in ps:
             tiers[p.budget_tier_inr] = tiers.get(p.budget_tier_inr, 0) + 1
         if len(tiers) < 3:
             problems.append("use at least 3 different budget_tier_inr values")
-        if max(tiers.values()) > 12:
-            problems.append("no single budget_tier_inr may be used by more than 12 personas")
+        if max(tiers.values()) > max_tier:
+            problems.append(
+                f"no single budget_tier_inr may be used by more than {max_tier} personas"
+            )
         if problems:
             raise ValueError("; ".join(problems))
         return self

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import ContactForm from "../components/ContactForm";
+import ScrollReveal from "../components/landing/ScrollReveal";
 import styles from "./landing.module.css";
 
 const stages = [
@@ -40,9 +42,13 @@ const capabilities = [
   ["Simulated persona evaluation", "Coming soon: test the page with a reusable panel of simulated customers."],
 ];
 
+const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+
+const workflow = ["Assessment", "Naming", "Website Launch", "Persona Arena", "Improvement Studio"];
+
 function DashboardPreview() {
   return (
-    <div className={styles.preview} aria-label="Illustration of the NOVENTRA founder workspace">
+    <div className={`${styles.preview} ${styles.enter}`} style={delay(260)} aria-label="Illustration of the NOVENTRA founder workspace">
       <div className={styles.previewTop}>
         <span className={styles.previewLogo}>NOVENTRA</span>
         <span className={styles.previewStatus}>WORKSPACE</span>
@@ -67,6 +73,15 @@ function DashboardPreview() {
             <small>Evidence over instinct</small>
           </div>
         </div>
+        <ol className={styles.flow} aria-label="NOVENTRA workflow">
+          {workflow.map((name, i) => (
+            <li key={name} className={styles.flowItem} style={delay(700 + i * 110)}>
+              <span className={styles.flowNum}>{i + 1}</span>
+              <span className={styles.flowName}>{name}</span>
+              <span className={styles.flowTrack} aria-hidden="true"><i /></span>
+            </li>
+          ))}
+        </ol>
         <div className={styles.previewFooter}>
           <span>PRE-MORTEM</span>
           <span>ECONOMICS</span>
@@ -81,6 +96,7 @@ function DashboardPreview() {
 export default function Home() {
   return (
     <main className={styles.page}>
+      <ScrollReveal />
       <nav className={styles.nav} aria-label="Main navigation">
         <Link href="/" className={styles.wordmark}>NOVENTRA</Link>
         <div className={styles.navLinks}>
@@ -93,13 +109,13 @@ export default function Home() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>THE FOUNDER&apos;S LAUNCHPAD</p>
-          <h1>Don&apos;t just build a business. <em className={styles.heroAccent}>Build one that&apos;s ready.</em></h1>
-          <p className={styles.heroLead}>
+          <p className={`${styles.eyebrow} ${styles.enter}`}>THE FOUNDER&apos;S LAUNCHPAD</p>
+          <h1 className={styles.enter} style={delay(90)}>Don&apos;t just build a business. <em className={styles.heroAccent}>Build one that&apos;s ready.</em></h1>
+          <p className={`${styles.heroLead} ${styles.enter}`} style={delay(190)}>
             Stress-test your idea, challenge your assumptions, discover your business identity and
             launch your website — before investing in the wrong business.
           </p>
-          <div className={styles.heroActions}>
+          <div className={`${styles.heroActions} ${styles.enter}`} style={delay(290)}>
             <Link href="/build" className={styles.primaryButton}>Test your business idea <span aria-hidden="true">↗</span></Link>
             <a href="#process" className={styles.textButton}>Explore how it works <span aria-hidden="true">↓</span></a>
           </div>
@@ -108,28 +124,28 @@ export default function Home() {
       </section>
 
       <section className={styles.positioning} id="about">
-        <p className={styles.eyebrow}>A BETTER STARTING POINT</p>
-        <div>
+        <p className={`${styles.eyebrow} ${styles.reveal}`} data-reveal="">A BETTER STARTING POINT</p>
+        <div className={styles.reveal} data-reveal="" style={delay(80)}>
           <h2>Most founders build the <em className={styles.positioningAccent}>surface</em> first.</h2>
           <p>
             Branding. Product. A polished website. But none of it answers the question that matters
             most: is this idea ready to become a business?
           </p>
         </div>
-        <div className={styles.positioningNote}>
+        <div className={`${styles.positioningNote} ${styles.reveal}`} data-reveal="" style={delay(160)}>
           <span className={styles.noteMark}>+</span>
           <p>NOVENTRA challenges the idea before it helps you launch it.</p>
         </div>
       </section>
 
       <section className={styles.process} id="process">
-        <div className={styles.sectionHeading}>
+        <div className={`${styles.sectionHeading} ${styles.reveal}`} data-reveal="">
           <p className={styles.eyebrow}>FROM IDEA TO EVIDENCE</p>
           <h2>A more deliberate way to move forward.</h2>
         </div>
         <div className={styles.stageGrid}>
           {stages.map((stage) => (
-            <article key={stage.number} className={styles.stage}>
+            <article key={stage.number} className={`${styles.stage} ${styles.reveal}`} data-reveal="" style={delay(stages.indexOf(stage) * 90)}>
               <span className={styles.stageNumber}>{stage.number}</span>
               <p className={styles.stageLabel}>{stage.label}</p>
               <h3>{stage.title}</h3>
@@ -140,13 +156,13 @@ export default function Home() {
       </section>
 
       <section className={styles.capabilities} id="capabilities">
-        <div className={styles.sectionHeading}>
+        <div className={`${styles.sectionHeading} ${styles.reveal}`} data-reveal="">
           <p className={styles.eyebrow}>WHAT&apos;S INSIDE</p>
           <h2>Clarity for every early decision.</h2>
         </div>
         <div className={styles.capabilityGrid}>
           {capabilities.map(([title, text], index) => (
-            <article key={title} className={styles.capability}>
+            <article key={title} className={`${styles.capability} ${styles.reveal}`} data-reveal="" style={delay((index % 4) * 80)}>
               <span>0{index + 1}</span>
               <h3>{title}</h3>
               <p>{text}</p>
@@ -155,7 +171,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={styles.closing}>
+      <section className={`${styles.closing} ${styles.reveal}`} data-reveal="">
         <p className={styles.eyebrow}>BEGIN WITH THE RIGHT QUESTION</p>
         <h2>Your idea deserves more than a guess.</h2>
         <p>Find out what needs to work before you make it real.</p>

@@ -45,6 +45,7 @@ export interface EvalSummary {
   d_score: number | null;
   d_se: number | null;
   completed_runs: number | null;
+  expected_runs: number | null;
 }
 
 export interface Attempt {

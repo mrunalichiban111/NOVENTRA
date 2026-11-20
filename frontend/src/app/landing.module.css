@@ -38,7 +38,9 @@
 }
 
 .navLinks { display: flex; gap: 2rem; margin-left: auto; margin-right: 2.5rem; color: var(--muted); font-size: 0.84rem; }
-.navLinks a, .footer a { transition: color 160ms ease; }
+.navLinks a, .footer a { position: relative; transition: color 200ms ease; }
+.navLinks a::after { position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; content: ""; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 240ms ease; }
+.navLinks a:hover::after, .navLinks a:focus-visible::after { transform: scaleX(1); }
 .navLinks a:hover, .navLinks a:focus-visible, .footer a:hover, .footer a:focus-visible { color: var(--terracotta); }
 .navCta, .primaryButton {
   display: inline-flex;
@@ -49,11 +51,12 @@
   color: #fffdfa;
   font-size: 0.83rem;
   font-weight: 700;
-  transition: transform 160ms ease, background 160ms ease;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 .navCta { padding: 0.75rem 1.1rem; }
 .primaryButton { padding: 1rem 1.35rem; }
-.navCta:hover, .primaryButton:hover { background: #ad4325; transform: translateY(-2px); }
+.navCta:hover, .primaryButton:hover { background: #ad4325; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(201, 87, 50, 0.26); }
+.navCta:active, .primaryButton:active { transform: translateY(0); box-shadow: none; }
 .navCta:focus-visible, .primaryButton:focus-visible, .textButton:focus-visible { outline: 3px solid #e8a58d; outline-offset: 4px; }
 
 .hero { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr); gap: 5rem; align-items: center; padding: 7rem 0 7.5rem; }
@@ -63,10 +66,15 @@
 .heroLead { max-width: 480px; margin-top: 2rem; color: var(--muted); font-size: 1.1rem; line-height: 1.65; }
 .heroActions { display: flex; align-items: center; gap: 1.5rem; margin-top: 2.5rem; }
 .textButton { color: var(--ink); font-size: 0.88rem; font-weight: 700; }
-.textButton span { color: var(--terracotta); margin-left: 0.25rem; }
+.textButton span { display: inline-block; color: var(--terracotta); margin-left: 0.25rem; transition: transform 200ms ease; }
+.textButton:hover span { transform: translateY(2px); }
 
-.preview { position: relative; border: 1px solid var(--line); border-radius: 1.25rem; background: var(--paper); box-shadow: 1.5rem 2rem 4rem rgba(55, 59, 49, 0.11); transform: rotate(1.5deg); }
-.preview::before { position: absolute; z-index: -1; width: 90%; height: 100%; content: ""; left: 5%; top: 1.25rem; border: 1px solid var(--line); border-radius: inherit; background: #eee9df; }
+/* The rotated preview is its own stacking context, so its own background would paint ABOVE a
+   z-index:-1 child. Paint every layer as a pseudo-element instead: beige sheet (-2), white card (-1),
+   then the content. */
+.preview { position: relative; isolation: isolate; border-radius: 1.25rem; transform: rotate(1.5deg); }
+.preview::before { position: absolute; z-index: -2; width: 90%; height: 100%; content: ""; left: 5%; top: 1.25rem; border: 1px solid var(--line); border-radius: inherit; background: #eee9df; }
+.preview::after { position: absolute; z-index: -1; inset: 0; content: ""; border: 1px solid var(--line); border-radius: inherit; background: var(--paper); box-shadow: 1.5rem 2rem 4rem rgba(55, 59, 49, 0.11); }
 .previewTop { display: flex; align-items: center; justify-content: space-between; padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--line); }
 .previewStatus { color: var(--muted); font-size: 0.61rem; font-weight: 700; letter-spacing: 0.15em; }
 .previewBody { padding: 2.3rem 2.5rem 2rem; }
@@ -150,6 +158,7 @@
   .previewGrid { grid-template-columns: 1fr; }
   .previewCard { min-height: 130px; }
   .previewFooter { flex-wrap: wrap; gap: 0.65rem; }
+  .flowItem { grid-template-columns: 1.2rem minmax(0, 1fr) 3rem; padding: 0.5rem 0.65rem; }
   .previewFooter b { width: 100%; margin-left: 0; }
   .positioning { display: block; padding: 5rem 0; }
   .positioningNote { margin-top: 2rem; }
@@ -175,4 +184,36 @@
 
 @media (prefers-reduced-motion: reduce) {
   .page :global(*), .page :global(*::before), .page :global(*::after) { scroll-behavior: auto !important; transition-duration: 0.01ms !important; transform: none !important; }
+}
+
+/* ---- motion (one-shot, transform/opacity only: no layout shift) ---- */
+@keyframes fadeUp { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+@keyframes fillIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Hero entrance is pure CSS: if animations are unavailable the content simply shows. */
+.enter { animation: fadeUp 720ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; }
+
+/* Workflow preview inside the hero illustration */
+.flow { list-style: none; display: grid; gap: 0.5rem; margin-top: 1.75rem; }
+.flowItem { display: grid; grid-template-columns: 1.4rem minmax(0, 1fr) 4.5rem; align-items: center; gap: 0.75rem; padding: 0.55rem 0.8rem; border: 1px solid var(--line); border-radius: 0.6rem; background: #f8f5ef; font-size: 0.78rem; font-weight: 600; animation: fadeUp 640ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; transition: border-color 220ms ease, transform 220ms ease; }
+.flowItem:hover { border-color: var(--terracotta); transform: translateX(2px); }
+.flowNum { color: var(--terracotta); font-size: 0.68rem; font-weight: 800; }
+.flowName { overflow-wrap: anywhere; }
+.flowTrack { display: block; height: 4px; border-radius: 4px; background: #ded8ce; overflow: hidden; }
+.flowTrack i { display: block; width: 100%; height: 100%; border-radius: inherit; background: #b7c9bc; transform-origin: left; animation: fillIn 900ms ease calc(var(--d, 0ms) + 300ms) both; }
+.flowItem:first-child .flowTrack i { background: var(--terracotta); }
+
+/* Scroll reveal. Hidden state is only ever applied by script, to elements below the fold. */
+.reveal { transition: opacity 600ms ease var(--d, 0ms), translate 600ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms); }
+.page [data-reveal="hidden"] { opacity: 0; translate: 0 18px; }
+.page [data-reveal="shown"] { opacity: 1; translate: 0 0; }
+.capability.reveal { transition: opacity 600ms ease var(--d, 0ms), translate 600ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms), transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease; }
+
+@media (hover: hover) {
+  .capability:hover { transform: translateY(-3px); border-color: var(--terracotta); background: var(--paper); box-shadow: 0 10px 24px rgba(55, 59, 49, 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page [data-reveal], .enter, .flowItem, .flowTrack i { opacity: 1 !important; translate: none !important; animation: none !important; transform: none !important; }
+  .navLinks a::after { transition: none; }
 }

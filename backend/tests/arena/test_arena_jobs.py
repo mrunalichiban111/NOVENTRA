@@ -201,3 +201,45 @@ def test_evaluation_requires_ready_panel(session_factory) -> None:
     with session_factory() as s, pytest.raises(arena.PersonasNotReady):
         arena.request_evaluation(s, bid)
     assert uuid.UUID(str(bid))
+
+
+@pytest.mark.parametrize("n", range(25, 31))
+def test_evaluation_scales_to_actual_panel_size(session_factory, n: int) -> None:
+    sf = session_factory
+    bid = live_business(sf)
+    llm = FakeArenaLLM(panel_size=n)
+    panel = _ready_panel(sf, bid, llm)
+    assert [p["id"] for p in panel.personas_json] == [f"p{i:02d}" for i in range(1, n + 1)]
+    with sf() as s:
+        eid = arena.request_evaluation(s, bid).row.id
+    arena.work_once(sf, W, llm)
+    ev = _evaluation(sf, eid)
+    assert ev.expected_runs == n * 3
+    assert ev.status == "complete" and _runs(sf, eid) == n * 3
+    assert llm.tasks().count("persona_evaluation") == -(-n // 10) * 3
+    converting = sum(1 for i in range(1, n + 1) if i % 3 == 0)
+    assert float(ev.d_score) == pytest.approx(100 * converting / n, abs=0.01)
+    assert ev.aggregate_json["total_runs"] == n * 3
+
+
+def test_short_panel_incomplete_evaluation_has_no_score_and_retries_only_missing(
+    session_factory,
+) -> None:
+    sf = session_factory
+    bid = live_business(sf)
+    last = tuple(f"p{i:02d}" for i in range(21, 26))  # final partial batch of a 25-panel
+    llm = FakeArenaLLM(fail={last}, panel_size=25)
+    _ready_panel(sf, bid, llm)
+    with sf() as s:
+        eid = arena.request_evaluation(s, bid).row.id
+    arena.work_once(sf, W, llm)
+    ev = _evaluation(sf, eid)
+    assert ev.expected_runs == 75 and ev.status == "incomplete" and ev.d_score is None
+    assert _runs(sf, eid) == 60  # never reported complete: 60 of 75
+    llm.fail.clear()
+    before = len(llm.calls)
+    with sf() as s:
+        assert arena.request_evaluation(s, bid).changed is True
+    arena.work_once(sf, W, llm)
+    assert len(llm.calls) - before == 3
+    assert _evaluation(sf, eid).status == "complete" and _runs(sf, eid) == 75
