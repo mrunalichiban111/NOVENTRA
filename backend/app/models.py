@@ -16,10 +16,12 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Identity,
     Index,
     Integer,
     Numeric,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -269,6 +271,7 @@ class SiteVersionStatus(StrEnum):
     DEPLOYED = "deployed"
     SUPERSEDED = "superseded"
     ROLLED_BACK = "rolled_back"
+    DISCARDED = "discarded"  # M6: a draft that was not promoted (kept for audit, not open)
 
 
 # At most one unfinished version per business (partial unique index uq_site_versions_one_open).
@@ -402,15 +405,108 @@ class Deployment(Base):
 
 
 class PersonaPanel(Base):
+    """The one simulated persona panel per business (M5: FR-AR-1). Generated once, reused for
+    every evaluated site version. `pending -> generating -> ready | failed`; a `generating` row is
+    committed before the paid call, so a crash is visible and never silently paid for again."""
+
     __tablename__ = "persona_panels"
+    __table_args__ = (
+        UniqueConstraint("business_id", name="uq_persona_panels_business"),
+        CheckConstraint(
+            _in("status", ["pending", "generating", "ready", "failed"]),
+            name="ck_persona_panels_status",
+        ),
+        CheckConstraint(
+            "status <> 'ready' OR personas_json IS NOT NULL", name="ck_persona_panels_ready_content"
+        ),
+        Index("ix_persona_panels_claim", "status", "locked_until"),
+    )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     business_id: Mapped[uuid.UUID] = _business_fk()
-    personas_json: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
+    personas_json: Mapped[list[Any] | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(12), nullable=False, server_default="pending")
+    error: Mapped[str | None] = mapped_column(Text)
+    generation_run_id: Mapped[str | None] = mapped_column(String(64))
+    generation_attempt: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    model: Mapped[str | None] = mapped_column(String(80))
+    prompt_version: Mapped[str | None] = mapped_column(String(16))
+    locked_by: Mapped[str | None] = mapped_column(String(64))
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+EVALUATION_STATUSES = ("queued", "running", "complete", "incomplete")
+
+
+class PersonaEvaluation(Base):
+    """One evaluation of one site version by the panel (M5: FR-AR-2..4, SRS 6). A claimable job:
+    the worker leases it, runs the missing persona/repeat combinations and finalizes D and SE.
+    D is only set when every expected run exists; otherwise it stays NULL (never extrapolated)."""
+
+    __tablename__ = "persona_evaluations"
+    __table_args__ = (
+        UniqueConstraint(
+            "panel_id", "site_version_id", name="uq_persona_evaluations_panel_version"
+        ),
+        UniqueConstraint(
+            "id", "panel_id", "site_version_id", name="uq_persona_evaluations_id_panel_version"
+        ),
+        CheckConstraint(
+            _in("status", list(EVALUATION_STATUSES)), name="ck_persona_evaluations_status"
+        ),
+        CheckConstraint("attempts >= 0", name="ck_persona_evaluations_attempts"),
+        CheckConstraint("expected_runs > 0", name="ck_persona_evaluations_expected"),
+        Index(
+            "uq_persona_evaluations_one_running",
+            "business_id",
+            unique=True,
+            postgresql_where=text("status IN ('queued', 'running')"),
+        ),
+        Index("ix_persona_evaluations_claim", "status", "locked_until"),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    business_id: Mapped[uuid.UUID] = _business_fk()
+    panel_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("persona_panels.id", ondelete="CASCADE"), nullable=False
+    )
+    site_version_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("site_versions.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(12), nullable=False, server_default="queued")
+    expected_runs: Mapped[int] = mapped_column(Integer, nullable=False, server_default="90")
+    evaluator_model: Mapped[str | None] = mapped_column(String(80))
+    prompt_version: Mapped[str | None] = mapped_column(String(16))
+    rubric_version: Mapped[str | None] = mapped_column(String(16))
+    d_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    d_se: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    aggregate_json: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
+    error_code: Mapped[str | None] = mapped_column(String(32))
+    error: Mapped[str | None] = mapped_column(Text)
+    run_id: Mapped[str | None] = mapped_column(String(64))
+    locked_by: Mapped[str | None] = mapped_column(String(64))
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    created_at: Mapped[datetime] = _created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+OBJECTION_TYPES = ("missing_info", "price", "trust", "fit", "clarity", "other")
 
 
 class PersonaRun(Base):
+    """One raw simulated evaluation: persona x repeat for one evaluation (FR-AR-6).
+    (evaluation_id, persona_id, run_idx) is the idempotent insert key; the composite FK keeps
+    panel_id/site_version_id consistent with the evaluation."""
+
     __tablename__ = "persona_runs"
     __table_args__ = (
         UniqueConstraint(
@@ -420,12 +516,32 @@ class PersonaRun(Base):
             "run_idx",
             name="uq_persona_runs_evaluation",
         ),
+        UniqueConstraint(
+            "evaluation_id", "persona_id", "run_idx", name="uq_persona_runs_eval_persona_repeat"
+        ),
+        ForeignKeyConstraint(
+            ["evaluation_id", "panel_id", "site_version_id"],
+            [
+                "persona_evaluations.id",
+                "persona_evaluations.panel_id",
+                "persona_evaluations.site_version_id",
+            ],
+            ondelete="CASCADE",
+            name="fk_persona_runs_evaluation",
+        ),
         CheckConstraint(_in("decision", ["convert", "bounce"]), name="ck_persona_runs_decision"),
         CheckConstraint("confidence BETWEEN 0 AND 1", name="ck_persona_runs_confidence"),
+        CheckConstraint(
+            "objection_type IS NULL OR " + _in("objection_type", list(OBJECTION_TYPES)),
+            name="ck_persona_runs_objection_type",
+        ),
+        CheckConstraint("run_idx BETWEEN 0 AND 2", name="ck_persona_runs_run_idx"),
         Index("ix_persona_runs_site_version", "site_version_id"),
+        Index("ix_persona_runs_evaluation", "evaluation_id"),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
+    evaluation_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     panel_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("persona_panels.id", ondelete="CASCADE"), nullable=False
     )
@@ -434,29 +550,82 @@ class PersonaRun(Base):
     )
     persona_id: Mapped[str] = mapped_column(String(64), nullable=False)
     run_idx: Mapped[int] = mapped_column(Integer, nullable=False)
+    batch_index: Mapped[int | None] = mapped_column(SmallInteger)
     decision: Mapped[str] = mapped_column(String(8), nullable=False)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3))
+    objection_type: Mapped[str | None] = mapped_column(String(16))
     objection: Mapped[str | None] = mapped_column(Text)
     section: Mapped[str | None] = mapped_column(String(64))
+    missing_info: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, server_default="[]")
     reasoning: Mapped[str | None] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(String(80))
+    run_id: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = _created_at()
 
 
+ATTEMPT_STATUSES = (
+    "awaiting_answers", "proposed", "approved_for_draft", "draft_built", "draft_evaluated",
+    "promoted", "not_promoted", "rejected", "stale", "discarded",
+)  # fmt: skip
+ATTEMPT_TERMINAL = ("promoted", "not_promoted", "rejected", "stale", "discarded")
+
+
 class ImprovementAttempt(Base):
+    """One M6 improvement attempt (FR-IM-1..3). clusters_json holds the opportunities,
+    changes_json the proposal operations, delta_demand = D_new - D_original."""
+
     __tablename__ = "improvement_attempts"
     __table_args__ = (
-        CheckConstraint(_in("outcome", ["accepted", "rolled_back"]), name="ck_improvement_outcome"),
+        CheckConstraint(
+            _in("outcome", ["accepted", "rolled_back", "promoted", "not_promoted", "discarded"]),
+            name="ck_improvement_outcome",
+        ),
+        CheckConstraint(_in("status", list(ATTEMPT_STATUSES)), name="ck_improvement_status"),
+        Index(
+            "uq_improvement_attempts_one_open",
+            "business_id",
+            unique=True,
+            postgresql_where=text(
+                "status NOT IN ('promoted', 'not_promoted', 'rejected', 'stale', 'discarded')"
+            ),
+        ),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     business_id: Mapped[uuid.UUID] = _business_fk()
     from_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    to_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    to_version: Mapped[int | None] = mapped_column(Integer)
     clusters_json: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, server_default="[]")
     changes_json: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, server_default="[]")
     delta_demand: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
     outcome: Mapped[str | None] = mapped_column(String(12))
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="awaiting_answers"
+    )
+    questions_json: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, server_default="[]")
+    answers_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    proposal_json: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
+    source_version: Mapped[int | None] = mapped_column(Integer)
+    source_content_hash: Mapped[str | None] = mapped_column(String(64))
+    original_evaluation_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("persona_evaluations.id", ondelete="SET NULL")
+    )
+    draft_evaluation_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("persona_evaluations.id", ondelete="SET NULL")
+    )
+    draft_site_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("site_versions.id", ondelete="SET NULL")
+    )
+    approval_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("approvals.id", ondelete="SET NULL")
+    )
+    reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = _created_at()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class Approval(Base):

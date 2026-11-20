@@ -18,7 +18,11 @@ def test_task_table_has_exactly_the_m2_tasks():
         "assumption_extraction",
         "business_names",
         "website_content",
+        "persona_panel",  # M5
+        "persona_evaluation",  # M5, Claude Haiku only (tier small)
+        "website_rewrite",  # M6
     }
+    assert routing.TASKS["persona_evaluation"].tier == "small"
     assert set(routing.TASKS) == set(OUTPUT_SCHEMAS)
     for spec in routing.TASKS.values():
         assert spec.max_tokens > 0 and spec.timeout_s > 0 and spec.tier in ("strong", "small")

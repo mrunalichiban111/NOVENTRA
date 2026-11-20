@@ -388,7 +388,12 @@ def _ensure_published(
 
 
 def _start_deployment(
-    session: Session, business: Business, claim: Claim, ctx: DeployContext, sv: SiteVersion
+    session: Session,
+    business: Business,
+    claim: Claim,
+    ctx: DeployContext,
+    sv: SiteVersion,
+    expected: BusinessStatus = S.DEPLOYING,
 ) -> tuple[uuid.UUID, int]:
     version_id = sv.id
 
@@ -422,7 +427,7 @@ def _start_deployment(
         session.flush()
         return dep.id, attempt
 
-    return checkpoint(session, business.id, S.DEPLOYING, apply)
+    return checkpoint(session, business.id, expected, apply)
 
 
 def _finish_failed(
@@ -436,6 +441,7 @@ def _finish_failed(
     health: dict | None = None,
     level: str | None = None,
     restored: int | None = None,
+    expected: BusinessStatus = S.DEPLOYING,
 ) -> None:
     version_id, version = sv.id, sv.version
 
@@ -460,7 +466,7 @@ def _finish_failed(
             restored_version=restored,
         )
 
-    checkpoint(session, business.id, S.DEPLOYING, apply)
+    checkpoint(session, business.id, expected, apply)
 
 
 def _restore_previous(ctx: DeployContext, claim: Claim, previous: SiteVersion | None) -> int | None:
@@ -477,16 +483,29 @@ def _restore_previous(ctx: DeployContext, claim: Claim, previous: SiteVersion | 
 
 
 def _deploy(
-    session: Session, business: Business, claim: Claim, ctx: DeployContext, sv: SiteVersion
+    session: Session,
+    business: Business,
+    claim: Claim,
+    ctx: DeployContext,
+    sv: SiteVersion,
+    expected: BusinessStatus = S.DEPLOYING,
 ) -> StageResult:
+    """Activate, verify, and on failure restore the previous verified release (M4B).
+
+    `expected` is the business status the checkpoints require. M4 uses the default (DEPLOYING;
+    the final writes then commit with the runner's DEPLOYING -> LIVE transition). M6 promotion
+    and manual rollback call it with LIVE on a live business and commit the session themselves.
+    """
     previous = deployed_version(session, business.id, exclude=sv.id)
-    dep_id, attempt = _start_deployment(session, business, claim, ctx, sv)
+    dep_id, attempt = _start_deployment(session, business, claim, ctx, sv, expected)
     try:
         ctx.provider.activate(claim.host, sv.version)
     except Exception as exc:
         restored = _restore_previous(ctx, claim, previous)
         msg = f"Activation of v{sv.version} failed: {type(exc).__name__}"
-        _finish_failed(session, business, sv, dep_id, attempt, msg, restored=restored)
+        _finish_failed(
+            session, business, sv, dep_id, attempt, msg, restored=restored, expected=expected
+        )
         raise DeploymentFailed(msg) from exc
 
     def activated(locked: Business) -> None:
@@ -504,7 +523,7 @@ def _deploy(
             attempt=attempt,
         )
 
-    checkpoint(session, business.id, S.DEPLOYING, activated)
+    checkpoint(session, business.id, expected, activated)
 
     report = ctx.provider.verify(claim.host, sv.version, sv.manifest_json)
     level = report.level.value if report.level else None
@@ -528,6 +547,7 @@ def _deploy(
             health=health,
             level=level,
             restored=restored,
+            expected=expected,
         )
         raise DeploymentFailed(msg)
 
@@ -565,7 +585,7 @@ def _deploy(
 
     # Not committed here: these writes commit atomically with the runner's DEPLOYING -> LIVE
     # transition, so a lost lease can never leave a verified version on a DEPLOYING business.
-    checkpoint(session, business.id, S.DEPLOYING, verified, commit=False)
+    checkpoint(session, business.id, expected, verified, commit=False)
     public = "publicly reachable" if health["publicly_reachable"] else "NOT publicly verified"
     return StageResult(
         S.LIVE,

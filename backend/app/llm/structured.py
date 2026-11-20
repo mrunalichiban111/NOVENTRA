@@ -120,6 +120,20 @@ def _validation_feedback(exc: ValidationError) -> str:
     return "; ".join(parts) + (f"; and {more} more" if more > 0 else "")
 
 
+def _validation_diagnostics(exc: ValidationError, limit: int = 12) -> str:
+    """Log-safe summary: error locations, types and messages only.
+
+    Never includes `input`, `ctx` or the model output. Messages come from Pydantic's fixed
+    templates or from our own validators, which never embed field values.
+    """
+    parts = []
+    for err in exc.errors(include_input=False, include_context=False, include_url=False)[:limit]:
+        loc = ".".join(str(p) for p in err["loc"]) or "(root)"
+        parts.append(f"{loc} [{err['type']}] {str(err['msg'])[:200]}")
+    more = exc.error_count() - len(parts)
+    return "; ".join(parts) + (f"; and {more} more" if more > 0 else "")
+
+
 def _transport_call(
     provider: LLMProvider,
     request: LLMRequest,
@@ -172,6 +186,9 @@ def _evaluate[T: BaseModel](response: LLMResponse, schema: type[T]) -> tuple[T |
     try:
         return schema.model_validate(candidate), "", ""
     except ValidationError as exc:
+        logger.warning(
+            "structured validation errors (%d): %s", exc.error_count(), _validation_diagnostics(exc)
+        )
         return None, "validation", _validation_feedback(exc)
 
 

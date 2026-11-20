@@ -31,6 +31,10 @@ CLAUDE_MODEL_STRONG = os.environ.get("CLAUDE_MODEL_STRONG", "")
 CLAUDE_MODEL_SMALL = os.environ.get("CLAUDE_MODEL_SMALL", "")
 # `or` so an empty value (e.g. a blank line in .env) falls back to the default.
 PER_RUN_CAP_USD = float(os.environ.get("PER_RUN_CAP_USD") or "2.00")
+# Rolling 24h estimated spend across ALL runs, enforced in LLMGuard.before under an advisory
+# lock. Configurable; the $5.00 default is pending product-owner approval for production.
+DEFAULT_DAILY_CAP_USD = "5.00"
+DAILY_SPEND_CAP_USD = float(os.environ.get("DAILY_SPEND_CAP_USD") or DEFAULT_DAILY_CAP_USD)
 
 # Contact delivery. Missing or contradictory settings fail as a delivery error, not at startup.
 SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()

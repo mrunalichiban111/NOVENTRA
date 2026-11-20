@@ -1,7 +1,7 @@
 # LLM layer (M2)
 
 Reusable Claude intelligence layer used by later stages (pre-mortem, assumptions, names, site
-content). Claude only; Gemini and persona/rewrite tasks arrive in M5/M6. Covers FR-PM-2,
+content). Claude only. M5 adds `persona_panel` (strong) and `persona_evaluation` (small = Claude Haiku, enforced at runtime; no Gemini, no fallback); rewrite tasks arrive in M6. Covers FR-PM-2,
 FR-PM-1, FR-FIN-1, FR-BR-1, FR-SITE-1, SRS 3.4 and 9.
 
 ## Architecture (`backend/app/llm/`)
@@ -125,3 +125,9 @@ Real mode needs revision `0002`; mock mode does not touch the database.
 - Costs ignore the Batch/long-context/priority price tiers; only the standard tier is modelled.
 - The default guard uses the app database (`DATABASE_URL`); an unreachable DB fails real calls.
 - Competitor and compliance text from the model is unverified general knowledge (FR-PM-3/4).
+
+
+## Spend caps (M5)
+- Per run: `PER_RUN_CAP_USD` (default 2.00), unchanged. Each worker execution (pipeline claim, persona panel job, persona evaluation job) has its own run_id.
+- Daily: `DAILY_SPEND_CAP_USD`, rolling 24h estimated spend across all runs. Default **5.00, pending product-owner approval** for production. Enforced inside `LLMGuard.before` under a global advisory lock taken after the per-run lock, in the same atomic reservation insert. A call counts once: as an active reservation until `after` settles it, then as usage.
+- Persona evaluation: 9 Haiku calls per full evaluation (3 batches x 10 personas x 3 repeats), at most 5 concurrent, no sampling parameters (Haiku 5.5 rejects non-default temperature; its default sampling is already nonzero).

@@ -6,7 +6,7 @@ Requirements live in `docs/SRS.md`. Do not read it whole. Grep for the ID you ne
 
 ## Stack
 FastAPI (Python 3.13), Postgres 16, Next.js (TypeScript), Docker Compose, Caddy.
-LLMs: Claude for pre-mortem, assumption extraction, site content and rewrites. Gemini for persona evaluations. Both go through `backend/app/llm/`.
+LLMs: Claude only, all through `backend/app/llm/`. Sonnet (strong) for pre-mortem, assumption extraction, site content, persona panel and rewrites. Claude Haiku (`CLAUDE_MODEL_SMALL`) for ALL persona evaluations: no Gemini, no provider fallback (M5 decision; supersedes SRS 3.4).
 
 ## Commands (keep this list current)
 - Database only: `docker compose up -d postgres`
@@ -27,7 +27,7 @@ LLMs: Claude for pre-mortem, assumption extraction, site content and rewrites. G
 - `backend/app/agents` pre-mortem, brand, content, personas, improvement
 - `backend/app/finance` deterministic finance engine and scoring
 - `backend/app/deploy` template rendering, release dirs, symlink swap, DNS
-- `backend/app/llm` provider interface (Claude, Gemini, mock)
+- `backend/app/llm` provider interface (Claude, mock)
 - `backend/prompts`, `backend/schemas` prompt and JSON schema files
 - `frontend/` Next.js dashboard; `sites/` generated sites (gitignored)
 

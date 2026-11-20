@@ -11,6 +11,7 @@ import {
   type NamesList,
 } from "@/lib/names-api";
 import { namingMode } from "@/lib/stages";
+import { EmptyState, Loading, Notice, PageHeader } from "../Page";
 import ui from "../ui.module.css";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import CandidateCard from "./CandidateCard";
@@ -97,8 +98,8 @@ export default function NamingStudio() {
       : "Naming opens once your assessment has a Go or Go with changes verdict.";
     return (
       <div>
-        <h1 className={ui.h1} style={{ fontSize: 22 }}>Naming Studio</h1>
-        <p className={ui.muted} role="status">{why}</p>
+        <PageHeader eyebrow="Stage 2" title="Naming Studio" />
+        <EmptyState title="Naming isn’t available yet">{why}</EmptyState>
         <div className={ui.actions}>
           <Link href={`/b/${id}`} className={`${ui.button} ${ui.ghost}`}>Back to assessment</Link>
         </div>
@@ -117,18 +118,18 @@ export default function NamingStudio() {
 
   return (
     <div>
-      <h1 className={ui.h1} style={{ fontSize: 22 }}>Naming Studio</h1>
-      <p className={ui.muted} style={{ marginBottom: 20 }}>
-        Generate name ideas for your business, compare them, check the web addresses and claim one
-        NOVENTRA subdomain. Checking a domain never buys it, and claiming a subdomain is not buying a domain.
-      </p>
+      <PageHeader
+        eyebrow="Stage 2"
+        title="Naming Studio"
+        lead="Generate name ideas, compare them, check the web addresses and claim one NOVENTRA subdomain. Checking a domain never buys it, and claiming a subdomain is not buying a domain."
+      />
 
-      {!list && !loadError && <p className={ui.muted}>Loading names…</p>}
+      {!list && !loadError && <Loading>Loading your name ideas…</Loading>}
       {loadError && (
-        <div className={ui.error} role="alert">
+        <Notice tone="error" title="We couldn’t load your names">
           {loadError}{" "}
-          <button className={`${ui.button} ${ui.ghost}`} onClick={reload}>Try again</button>
-        </div>
+          <button className={`${ui.button} ${ui.secondary} ${ui.buttonSm}`} onClick={reload}>Try again</button>
+        </Notice>
       )}
 
       {list && !list.subdomains_configured && (

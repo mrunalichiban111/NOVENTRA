@@ -1,0 +1,349 @@
+{
+  "evaluations": [
+    {
+      "persona_id": "p01",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "missing_info",
+      "top_objection": "Menu and daily dishes are not shown",
+      "section": "pricing",
+      "missing_info": [
+        "Sample weekly menu"
+      ],
+      "reason": "I cannot decide without seeing what I would actually eat."
+    },
+    {
+      "persona_id": "p02",
+      "decision": "bounce",
+      "confidence": 0.65,
+      "objection_type": "fit",
+      "top_objection": "I cook at home most days",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Nice idea, but I do not need a meal service."
+    },
+    {
+      "persona_id": "p03",
+      "decision": "convert",
+      "confidence": 0.75,
+      "objection_type": "missing_info",
+      "top_objection": "Delivery areas not listed",
+      "section": "faq",
+      "missing_info": [
+        "Delivery areas"
+      ],
+      "reason": "Worth joining the waitlist to find out more."
+    },
+    {
+      "persona_id": "p04",
+      "decision": "bounce",
+      "confidence": 0.85,
+      "objection_type": "price",
+      "top_objection": "Price per meal is unclear",
+      "section": "pricing",
+      "missing_info": [
+        "Price per meal"
+      ],
+      "reason": "Without a clear price I will not sign up."
+    },
+    {
+      "persona_id": "p05",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "trust",
+      "top_objection": "Nothing says who cooks or how hygiene is checked",
+      "section": "proof",
+      "missing_info": [
+        "Who cooks the food",
+        "Kitchen hygiene"
+      ],
+      "reason": "I need to know who is cooking before I trust it."
+    },
+    {
+      "persona_id": "p06",
+      "decision": "convert",
+      "confidence": 0.65,
+      "objection_type": "clarity",
+      "top_objection": "",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Home-cooked lunches delivered sounds exactly like what I need."
+    },
+    {
+      "persona_id": "p07",
+      "decision": "bounce",
+      "confidence": 0.75,
+      "objection_type": "missing_info",
+      "top_objection": "Menu and daily dishes are not shown",
+      "section": "pricing",
+      "missing_info": [
+        "Sample weekly menu"
+      ],
+      "reason": "I cannot decide without seeing what I would actually eat."
+    },
+    {
+      "persona_id": "p08",
+      "decision": "bounce",
+      "confidence": 0.85,
+      "objection_type": "fit",
+      "top_objection": "I cook at home most days",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Nice idea, but I do not need a meal service."
+    },
+    {
+      "persona_id": "p09",
+      "decision": "convert",
+      "confidence": 0.55,
+      "objection_type": "missing_info",
+      "top_objection": "Delivery areas not listed",
+      "section": "faq",
+      "missing_info": [
+        "Delivery areas"
+      ],
+      "reason": "Worth joining the waitlist to find out more."
+    },
+    {
+      "persona_id": "p10",
+      "decision": "bounce",
+      "confidence": 0.65,
+      "objection_type": "price",
+      "top_objection": "Price per meal is unclear",
+      "section": "pricing",
+      "missing_info": [
+        "Price per meal"
+      ],
+      "reason": "Without a clear price I will not sign up."
+    },
+    {
+      "persona_id": "p11",
+      "decision": "bounce",
+      "confidence": 0.75,
+      "objection_type": "trust",
+      "top_objection": "Nothing says who cooks or how hygiene is checked",
+      "section": "proof",
+      "missing_info": [
+        "Who cooks the food",
+        "Kitchen hygiene"
+      ],
+      "reason": "I need to know who is cooking before I trust it."
+    },
+    {
+      "persona_id": "p12",
+      "decision": "convert",
+      "confidence": 0.85,
+      "objection_type": "clarity",
+      "top_objection": "",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Home-cooked lunches delivered sounds exactly like what I need."
+    },
+    {
+      "persona_id": "p13",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "missing_info",
+      "top_objection": "Menu and daily dishes are not shown",
+      "section": "pricing",
+      "missing_info": [
+        "Sample weekly menu"
+      ],
+      "reason": "I cannot decide without seeing what I would actually eat."
+    },
+    {
+      "persona_id": "p14",
+      "decision": "bounce",
+      "confidence": 0.65,
+      "objection_type": "fit",
+      "top_objection": "I cook at home most days",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Nice idea, but I do not need a meal service."
+    },
+    {
+      "persona_id": "p15",
+      "decision": "convert",
+      "confidence": 0.75,
+      "objection_type": "missing_info",
+      "top_objection": "Delivery areas not listed",
+      "section": "faq",
+      "missing_info": [
+        "Delivery areas"
+      ],
+      "reason": "Worth joining the waitlist to find out more."
+    },
+    {
+      "persona_id": "p16",
+      "decision": "bounce",
+      "confidence": 0.85,
+      "objection_type": "price",
+      "top_objection": "Price per meal is unclear",
+      "section": "pricing",
+      "missing_info": [
+        "Price per meal"
+      ],
+      "reason": "Without a clear price I will not sign up."
+    },
+    {
+      "persona_id": "p17",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "trust",
+      "top_objection": "Nothing says who cooks or how hygiene is checked",
+      "section": "proof",
+      "missing_info": [
+        "Who cooks the food",
+        "Kitchen hygiene"
+      ],
+      "reason": "I need to know who is cooking before I trust it."
+    },
+    {
+      "persona_id": "p18",
+      "decision": "convert",
+      "confidence": 0.65,
+      "objection_type": "clarity",
+      "top_objection": "",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Home-cooked lunches delivered sounds exactly like what I need."
+    },
+    {
+      "persona_id": "p19",
+      "decision": "bounce",
+      "confidence": 0.75,
+      "objection_type": "missing_info",
+      "top_objection": "Menu and daily dishes are not shown",
+      "section": "pricing",
+      "missing_info": [
+        "Sample weekly menu"
+      ],
+      "reason": "I cannot decide without seeing what I would actually eat."
+    },
+    {
+      "persona_id": "p20",
+      "decision": "bounce",
+      "confidence": 0.85,
+      "objection_type": "fit",
+      "top_objection": "I cook at home most days",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Nice idea, but I do not need a meal service."
+    },
+    {
+      "persona_id": "p21",
+      "decision": "convert",
+      "confidence": 0.55,
+      "objection_type": "missing_info",
+      "top_objection": "Delivery areas not listed",
+      "section": "faq",
+      "missing_info": [
+        "Delivery areas"
+      ],
+      "reason": "Worth joining the waitlist to find out more."
+    },
+    {
+      "persona_id": "p22",
+      "decision": "bounce",
+      "confidence": 0.65,
+      "objection_type": "price",
+      "top_objection": "Price per meal is unclear",
+      "section": "pricing",
+      "missing_info": [
+        "Price per meal"
+      ],
+      "reason": "Without a clear price I will not sign up."
+    },
+    {
+      "persona_id": "p23",
+      "decision": "bounce",
+      "confidence": 0.75,
+      "objection_type": "trust",
+      "top_objection": "Nothing says who cooks or how hygiene is checked",
+      "section": "proof",
+      "missing_info": [
+        "Who cooks the food",
+        "Kitchen hygiene"
+      ],
+      "reason": "I need to know who is cooking before I trust it."
+    },
+    {
+      "persona_id": "p24",
+      "decision": "convert",
+      "confidence": 0.85,
+      "objection_type": "clarity",
+      "top_objection": "",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Home-cooked lunches delivered sounds exactly like what I need."
+    },
+    {
+      "persona_id": "p25",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "missing_info",
+      "top_objection": "Menu and daily dishes are not shown",
+      "section": "pricing",
+      "missing_info": [
+        "Sample weekly menu"
+      ],
+      "reason": "I cannot decide without seeing what I would actually eat."
+    },
+    {
+      "persona_id": "p26",
+      "decision": "bounce",
+      "confidence": 0.65,
+      "objection_type": "fit",
+      "top_objection": "I cook at home most days",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Nice idea, but I do not need a meal service."
+    },
+    {
+      "persona_id": "p27",
+      "decision": "convert",
+      "confidence": 0.75,
+      "objection_type": "missing_info",
+      "top_objection": "Delivery areas not listed",
+      "section": "faq",
+      "missing_info": [
+        "Delivery areas"
+      ],
+      "reason": "Worth joining the waitlist to find out more."
+    },
+    {
+      "persona_id": "p28",
+      "decision": "bounce",
+      "confidence": 0.85,
+      "objection_type": "price",
+      "top_objection": "Price per meal is unclear",
+      "section": "pricing",
+      "missing_info": [
+        "Price per meal"
+      ],
+      "reason": "Without a clear price I will not sign up."
+    },
+    {
+      "persona_id": "p29",
+      "decision": "bounce",
+      "confidence": 0.55,
+      "objection_type": "trust",
+      "top_objection": "Nothing says who cooks or how hygiene is checked",
+      "section": "proof",
+      "missing_info": [
+        "Who cooks the food",
+        "Kitchen hygiene"
+      ],
+      "reason": "I need to know who is cooking before I trust it."
+    },
+    {
+      "persona_id": "p30",
+      "decision": "convert",
+      "confidence": 0.65,
+      "objection_type": "clarity",
+      "top_objection": "",
+      "section": "hero",
+      "missing_info": [],
+      "reason": "Home-cooked lunches delivered sounds exactly like what I need."
+    }
+  ]
+}
