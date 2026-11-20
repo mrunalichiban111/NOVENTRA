@@ -134,6 +134,11 @@ Responses carry `"simulated": true` and a label. POSTs are rate limited. Polling
 | `POST /api/businesses/{id}/personas/evaluate` `{site_version?}` | 202 queues 9 Claude Haiku calls (3 batches x 10 x 3 repeats, <=5 concurrent). Repeat = no-op; `incomplete` re-queues only missing runs. 409 `personas_not_ready`/`no_live_version`/`evaluation_in_progress`, 422 `invalid_version`, 503 `evaluator_misconfigured`/`budget_exceeded` |
 | `GET /api/businesses/{id}/personas/results?site_version=` | Live cards, ranked objections, `d_score`/`d_se` only when complete (never extrapolated) |
 
+## Improvement studio (M6: FR-IM-1..3, 5, 6)
+
+`GET /improve`, `POST /improve/start`, `PATCH /improve/questions/{qid}` (`{answer}` or `{not_decided:true}`, stored with source=user), `POST /improve/proposal` (one Sonnet call; whitelisted paths, <=3 sections, numbers traced to founder facts), `POST /improve/approve` (`{item_ids, approve_consequential}`), `POST /improve/reject`, `POST /improve/discard`, `POST /improve/promote`, `POST /site/rollback` (`{to_version}`).
+Drafts are built by the worker as immutable v(N+1) (never activated), evaluated on the same panel with Claude Haiku, and promoted only when both evaluations are complete and comparable, D_new >= D_original + 3, the founder clicked promote (plus approval for price/plan/guarantee items), and the source version/hash is unchanged. Promotion and rollback reuse M4's `_deploy` (activate, verify, restore previous on failure). Codes: `evaluation_incomplete`, `evaluation_in_progress`, `proposal_not_ready`, `proposal_stale`, `proposal_already_applied`, `approval_required`, `draft_not_improved`, `budget_exceeded`.
+
 ## Worker
 
 `python -m app.worker` polls for runnable businesses (non-terminal, not FAILED). A claim uses

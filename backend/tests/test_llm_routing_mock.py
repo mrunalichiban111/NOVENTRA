@@ -20,6 +20,7 @@ def test_task_table_has_exactly_the_m2_tasks():
         "website_content",
         "persona_panel",  # M5
         "persona_evaluation",  # M5, Claude Haiku only (tier small)
+        "website_rewrite",  # M6
     }
     assert routing.TASKS["persona_evaluation"].tier == "small"
     assert set(routing.TASKS) == set(OUTPUT_SCHEMAS)

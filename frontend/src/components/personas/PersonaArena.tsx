@@ -188,6 +188,9 @@ export default function PersonaArena() {
                 </div>
               </div>
               <p className={styles.note}>{results.note}</p>
+              <div className={ui.actions}>
+                <Link href={`/b/${id}/improve`} className={ui.button}>Improve the page</Link>
+              </div>
             </>
           )}
         </section>

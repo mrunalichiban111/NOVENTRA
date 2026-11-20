@@ -94,6 +94,12 @@ export function stageStates(b: Business | null, id: string): StageState[] {
       upcoming: false,
       note: !b ? "Loading" : arenaAvailable(b) ? null : "Available once your website is live",
     },
-    { key: "improve", label: "Improvement", href: null, upcoming: true, note: "Upcoming" },
+    {
+      key: "improve",
+      label: "Improvement",
+      href: b && arenaAvailable(b) ? `${base}/improve` : null,
+      upcoming: false,
+      note: !b ? "Loading" : arenaAvailable(b) ? null : "Available once your website is live",
+    },
   ];
 }

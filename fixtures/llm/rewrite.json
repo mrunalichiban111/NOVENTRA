@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "path": "hero.subhead",
+      "new_text": "LocalLoop pools neighbourhood delivery routes so independent shops share the cost of same-day trips instead of paying for half-empty runs.",
+      "rationale": "Clarifies the offer named by the top clarity objection.",
+      "opportunity_id": "clarity:hero"
+    },
+    {
+      "path": "faq.0.answer",
+      "new_text": "Not yet. We are collecting interest now and will confirm the first neighbourhoods and pricing with everyone on the waitlist before launch.",
+      "rationale": "Answers the missing information visitors asked about.",
+      "opportunity_id": "missing_info:faq"
+    },
+    {
+      "path": "cta.headline",
+      "new_text": "Join the waitlist to hear first when LocalLoop starts near you",
+      "rationale": "Makes the next step concrete.",
+      "opportunity_id": "clarity:cta"
+    }
+  ]
+}

@@ -305,6 +305,26 @@ class PersonaEvaluationBatch(_Out):
     evaluations: list[PersonaEvaluation] = Field(min_length=1, max_length=PANEL_SIZE)
 
 
+# --- Improvement studio (M6: FR-IM-2) ---------------------------------------------------------
+# The model proposes replacement TEXT for whitelisted WebsiteContent paths only. Python decides
+# which paths are allowed, classifies every item and validates the result with WebsiteContent.
+
+
+class RewriteItem(_Out):
+    path: str = Field(min_length=3, max_length=40)
+    new_text: str = Field(min_length=1, max_length=300)
+    rationale: str = Field(min_length=1, max_length=160)
+    opportunity_id: str = Field(max_length=60)
+
+
+class RewriteProposal(_Out):
+    items: list[RewriteItem] = Field(min_length=1, max_length=8)
+
+
 OUTPUT_SCHEMAS.update(
-    {"persona_panel": PersonaPanelOut, "persona_evaluation": PersonaEvaluationBatch}
+    {
+        "persona_panel": PersonaPanelOut,
+        "persona_evaluation": PersonaEvaluationBatch,
+        "website_rewrite": RewriteProposal,
+    }
 )

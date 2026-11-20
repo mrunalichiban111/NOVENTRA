@@ -94,6 +94,7 @@ VALID = {
     "website_content": valid_content,
     "persona_panel": lambda: _fixture("persona_panel.json"),
     "persona_evaluation": lambda: _fixture("persona_evaluation.json"),
+    "website_rewrite": lambda: _fixture("rewrite.json"),
 }
 
 

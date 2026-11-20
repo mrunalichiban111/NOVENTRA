@@ -36,6 +36,8 @@ TASKS: dict[str, TaskSpec] = {
         # (CLAUDE_MODEL_SMALL, checked at runtime by app.agents.personas.assert_haiku).
         TaskSpec("persona_panel", "strong", 12000, 120, "persona_panel.json"),
         TaskSpec("persona_evaluation", "small", 3000, 45, "persona_evaluation.json"),
+        # M6 improvement studio: structured text replacements only (validated in Python).
+        TaskSpec("website_rewrite", "strong", 4096, 90, "rewrite.json"),
     )
 }
 
