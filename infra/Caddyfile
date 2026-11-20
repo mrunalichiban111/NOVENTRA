@@ -1,3 +1,30 @@
+
+{
+    on_demand_tls {
+        permission http http://127.0.0.1:2020/internal/sites/tls-allowed
+    }
+}
+
+
+http://127.0.0.1:2020 {
+    bind 127.0.0.1
+
+    @ask path /internal/sites/tls-allowed
+    handle @ask {
+        reverse_proxy api:8000 {
+            header_up Authorization "Bearer {env.INTERNAL_TLS_ASK_TOKEN}"
+            header_up -X-Forwarded-For
+            header_up -X-Forwarded-Host
+            header_up -X-Forwarded-Proto
+        }
+    }
+
+    handle {
+        respond 404
+    }
+}
+
+
 noventras.biz, www.noventras.biz {
     handle /api/* {
         reverse_proxy api:8000
@@ -5,5 +32,31 @@ noventras.biz, www.noventras.biz {
 
     handle {
         reverse_proxy frontend:3000
+    }
+}
+
+
+https:// {
+    tls {
+        on_demand
+    }
+
+    @noventra host *.noventras.biz
+    handle @noventra {
+        root * /srv/sites/{http.request.host}/current
+
+        header {
+            Content-Security-Policy "default-src 'none'; style-src 'self'; img-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'"
+            X-Content-Type-Options "nosniff"
+            Strict-Transport-Security "max-age=31536000"
+            Referrer-Policy "no-referrer"
+            -Server
+        }
+
+        file_server
+    }
+
+    handle {
+        respond 404
     }
 }

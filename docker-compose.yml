@@ -107,6 +107,8 @@ services:
 
   caddy:
     image: caddy:2-alpine
+    environment:
+      INTERNAL_TLS_ASK_TOKEN: ${INTERNAL_TLS_ASK_TOKEN:?INTERNAL_TLS_ASK_TOKEN is required}
     ports:
       - "80:80"
       - "443:443"
