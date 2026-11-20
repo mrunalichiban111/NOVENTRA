@@ -20,6 +20,7 @@ export default function ContactForm() {
         message: String(form.get("message") ?? ""),
         website: String(form.get("website") ?? ""),
       });
+      setError("");
       event.currentTarget.reset();
       setState("success");
     } catch (caught) {

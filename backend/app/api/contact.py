@@ -18,7 +18,7 @@ from app.database import get_session
 from app.models import ContactMessage
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["public"])
+router = APIRouter(prefix="/api", tags=["public"])
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
@@ -112,11 +112,10 @@ def submit_contact(payload: ContactCreate, request: Request, session: Session) -
         session.add(row)
     try:
         _send(payload)
-    except Exception as exc:
-        logger.warning(
-            "contact email delivery failed request_id=%s error=%s",
+    except Exception:
+        logger.exception(
+            "contact email delivery failed request_id=%s",
             request_id,
-            type(exc).__name__,
         )
         return _mark_sent(session, row, False)
     return _mark_sent(session, row, True)
@@ -131,6 +130,5 @@ def _mark_sent(session: Session, row: ContactMessage, sent_ok: bool) -> dict[str
 
 
 @router.post("/public/contact")
-@router.post("/api/public/contact")
 def contact(payload: ContactCreate, request: Request, session: SessionDep) -> dict[str, str]:
     return submit_contact(payload, request, session)
