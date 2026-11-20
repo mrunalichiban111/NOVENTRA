@@ -11,7 +11,7 @@ import {
   answerQuestion, approveItems, discardDraft, generateProposal, getAttempt, promoteDraft,
   rejectProposal, rollbackSite, startAttempt, type Attempt, type Classification, type EvalSummary, type ProposalItem,
 } from "@/lib/improve-api";
-import { fieldLabel, objectionLabel, sectionLabel } from "@/lib/improve-labels";
+import { ANSWER_MAX, answerCounter, fieldLabel, objectionLabel, sectionLabel } from "@/lib/improve-labels";
 import { EmptyState, Loading, Notice, PageHeader, SectionHead } from "../Page";
 import styles from "../personas/personas.module.css";
 import ui from "../ui.module.css";
@@ -207,13 +207,19 @@ export default function ImproveStudio() {
           <div className={ui.form}>
             {a.questions.map((q) => {
               const saved = a.answers[q.id];
+              const text = drafts[q.id] ?? saved?.value ?? "";
+              const counter = answerCounter(text);
               return (
                 <div key={q.id}>
-                  <label className={ui.label} htmlFor={`ans-${q.id}`}>{q.question}</label>
-                  <textarea id={`ans-${q.id}`} className={ui.textarea} style={{ minHeight: 70 }} maxLength={300}
-                    value={drafts[q.id] ?? saved?.value ?? ""} onChange={(e) => setDrafts({ ...drafts, [q.id]: e.target.value })} />
+                  <label className={ui.label} htmlFor={`ans-${q.id}`}>{q.question} <span className={ui.small}>(up to {ANSWER_MAX} characters)</span></label>
+                  <textarea id={`ans-${q.id}`} className={ui.textarea} style={{ minHeight: 70 }}
+                    aria-describedby={`ans-${q.id}-count`} aria-invalid={counter.over}
+                    value={text} onChange={(e) => setDrafts({ ...drafts, [q.id]: e.target.value })} />
+                  <span id={`ans-${q.id}-count`} className={counter.over ? ui.whyDisabled : ui.small} aria-live="polite">
+                    {counter.label}{counter.message ? ` — ${counter.message}` : ""}
+                  </span>
                   <div className={ui.actions}>
-                    <button className={ui.button} disabled={busy || !(drafts[q.id] ?? "").trim()}
+                    <button className={ui.button} disabled={busy || !(drafts[q.id] ?? "").trim() || counter.over}
                       onClick={() => act(() => answerQuestion(id, q.id, drafts[q.id], false), "Could not save.")}>Save answer</button>
                     <button className={`${ui.button} ${ui.secondary}`} disabled={busy}
                       onClick={() => act(() => answerQuestion(id, q.id, null, true), "Could not save.")}>Skip this question</button>

@@ -23,3 +23,14 @@ test("section labels", () => {
   assert.equal(sectionLabel("how_it_works"), "How it works");
   assert.equal(sectionLabel("weird_thing"), "Weird thing");
 });
+
+test("answer counter shows the limit and never truncates", async () => {
+  const { ANSWER_MAX, answerCounter } = await import("./improve-labels.ts");
+  assert.equal(ANSWER_MAX, 300);
+  assert.deepEqual(answerCounter("abc"), { label: "3 / 300 characters", over: false, message: null });
+  const long = "x".repeat(305);
+  const c = answerCounter(long);
+  assert.equal(c.over, true);
+  assert.equal(c.label, "305 / 300 characters");
+  assert.match(c.message, /Shorten this answer by 5 characters/);
+});
