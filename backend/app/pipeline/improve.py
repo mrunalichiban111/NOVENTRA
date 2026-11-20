@@ -33,6 +33,7 @@ from app.deploy import service
 from app.deploy.providers import DeployProvider
 from app.deploy.render import render_site
 from app.deploy.site_model import TEMPLATE_VERSION, content_hash
+from app.deploy.visible_text import extract_visible_text
 from app.finance.scoring import ComparableKey, comparable
 from app.llm.schemas import WebsiteContent
 from app.llm.structured import run_structured
@@ -135,7 +136,9 @@ def highest(levels: list[str]) -> str:
 # --- editable fields (whitelist with WebsiteContent limits) ----------------------------------
 
 
-def editable_fields(c: WebsiteContent) -> list[tuple[str, str, int]]:
+def editable_fields(c: WebsiteContent, pricing_visible: bool = True) -> list[tuple[str, str, int]]:
+    """Whitelisted paths. Without a founder price the template hides the plan card
+    (`site_model.pricing_view`), so `pricing.*` is only editable when it will be visible."""
     out = [
         ("hero.headline", c.hero.headline, 70),
         ("hero.subhead", c.hero.subhead, 160),
@@ -150,9 +153,10 @@ def editable_fields(c: WebsiteContent) -> list[tuple[str, str, int]]:
         ("proof.founder_story", c.proof.founder_story, 300),
         ("proof.process", c.proof.process, 300),
         ("proof.guarantees", c.proof.guarantees, 300),
-        ("pricing.0.name", c.pricing[0].name, 40),
     ]
-    out += [(f"pricing.0.bullets.{i}", b, 80) for i, b in enumerate(c.pricing[0].bullets)]
+    if pricing_visible:
+        out.append(("pricing.0.name", c.pricing[0].name, 40))
+        out += [(f"pricing.0.bullets.{i}", b, 80) for i, b in enumerate(c.pricing[0].bullets)]
     for i, f in enumerate(c.faq):
         out += [(f"faq.{i}.question", f.question, 120), (f"faq.{i}.answer", f.answer, 200)]
     out += [("cta.headline", c.cta.headline, 70), ("cta.button_label", c.cta.button_label, 24)]
@@ -186,13 +190,21 @@ def apply_items(content: dict[str, Any], items: list[dict[str, Any]]) -> Website
     return WebsiteContent.model_validate(data)
 
 
+def invisible_items(html: str, items: list[dict[str, Any]]) -> list[str]:
+    """Paths of items whose new text does not appear in the page's visible text (what the
+    persona evaluator reads)."""
+    visible = " ".join(" ".join(t for _, t in extract_visible_text(html)).split())
+    return [i["path"] for i in items if " ".join(i["new"].split()) not in visible]
+
+
 def validate_proposal(
-    content: dict[str, Any], raw_items: list[Any], facts_text: str
+    content: dict[str, Any], raw_items: list[Any], facts_text: str, pricing_visible: bool = True
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """(accepted items, rejected items with reasons). Only whitelisted paths, at most 3
-    sections, numbers traced to existing text or founder facts, each item valid on its own."""
+    sections, numbers traced to existing text or founder facts, each item valid on its own.
+    `pricing_visible=False` (no founder price) rejects `pricing.*` before founder approval."""
     current = WebsiteContent.model_validate(content)
-    fields = {p: (t, lim) for p, t, lim in editable_fields(current)}
+    fields = {p: (t, lim) for p, t, lim in editable_fields(current, pricing_visible)}
     known_numbers = _numbers(" ".join(t for t, _ in fields.values()) + " " + facts_text)
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
@@ -457,7 +469,14 @@ def generate_proposal(
         (qtext[qid], a["value"] if a["status"] == "answered" else "not decided")
         for qid, a in (attempt.answers_json or {}).items()
     ]
-    prompt = rewrite_agent.rewrite_prompt(editable_fields(content), attempt.clusters_json, answers)
+    pricing_visible = business.price_guess is not None
+    original = session.get(PersonaEvaluation, attempt.original_evaluation_id)
+    prompt = rewrite_agent.rewrite_prompt(
+        editable_fields(content, pricing_visible),
+        attempt.clusters_json,
+        answers,
+        evidence=rewrite_agent.panel_evidence(original),
+    )
     facts = " ".join(a for _, a in answers) + (
         f" {business.price_guess}" if business.price_guess is not None else ""
     )
@@ -467,7 +486,9 @@ def generate_proposal(
     proposal, model = rewrite_agent.generate_rewrite(
         prompt, business_id=business_id, run_id=run_id, run_llm=run_llm
     )
-    accepted, rejected = validate_proposal(live.content_json, proposal.items, facts)
+    accepted, rejected = validate_proposal(
+        live.content_json, proposal.items, facts, pricing_visible=pricing_visible
+    )
     business, attempt = _lock_attempt(session, business_id)
     if attempt.id != attempt_id or attempt.status != "awaiting_answers":
         session.commit()
@@ -716,6 +737,9 @@ def build_draft(session: Session, attempt: ImprovementAttempt, deps: Deps, worke
         new_content, business_name=claim.name, host=claim.host,
         price_guess=business.price_guess, links=ctx.links,
     )  # fmt: skip
+    hidden = invisible_items(site.files["index.html"].decode("utf-8"), approved)
+    if hidden:  # never evaluate a draft whose approved edits a visitor cannot see
+        raise ValueError(f"approved change(s) not visible on the rendered page: {hidden}")
     next_version = (
         session.scalar(
             select(SiteVersion.version)

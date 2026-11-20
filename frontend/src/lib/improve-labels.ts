@@ -66,3 +66,17 @@ const OBJECTION: Record<string, string> = {
 export function objectionLabel(type: string): string {
   return OBJECTION[type] ?? sentence(type);
 }
+
+/** Founder answer limit; must match ANSWER_MAX in backend/app/pipeline/improve.py. */
+export const ANSWER_MAX = 300;
+
+/** Live counter for an answer. Text is never cut: over the limit, saving is blocked instead. */
+export function answerCounter(text: string): { label: string; over: boolean; message: string | null } {
+  const n = text.length;
+  const over = n > ANSWER_MAX;
+  return {
+    label: `${n} / ${ANSWER_MAX} characters`,
+    over,
+    message: over ? `Shorten this answer by ${n - ANSWER_MAX} character${n - ANSWER_MAX === 1 ? "" : "s"} to save it.` : null,
+  };
+}

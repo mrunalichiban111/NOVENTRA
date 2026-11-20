@@ -3,13 +3,18 @@
 persona calls; mock deploy provider. No network, no paid calls."""
 
 import json
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import select, update
 
 from app import config
+from app.agents import improvement as rewrite_agent
 from app.deploy.providers import MockDeployProvider
-from app.llm.schemas import RewriteItem
+from app.deploy.render import render_site
+from app.deploy.site_model import site_links
+from app.llm.schemas import RewriteItem, WebsiteContent
+from app.llm.structured import PROMPTS_DIR
 from app.models import Business, ImprovementAttempt, SiteVersion
 from app.pipeline import arena, improve
 from tests.arena.helpers import FakeArenaLLM, configure, live_business
@@ -224,3 +229,85 @@ def test_start_requires_complete_evaluation(session_factory) -> None:
     bid = live_business(session_factory)
     with session_factory() as s, pytest.raises(improve.EvaluationIncomplete):
         improve.start(s, bid)
+
+
+# --- M6 fix regressions: hidden pricing, prompt evidence --------------------------------------
+
+
+def test_pricing_paths_rejected_when_no_founder_price() -> None:
+    raw = [item("pricing.0.name", "Quote-based help"), item("pricing.0.bullets.0", "Ask first"),
+           item("hero.headline", "Home lunches")]  # fmt: skip
+    accepted, rejected = improve.validate_proposal(CONTENT, raw, "", pricing_visible=False)
+    assert [a["path"] for a in accepted] == ["hero.headline"]
+    assert {r["path"]: r["reason"] for r in rejected} == {
+        "pricing.0.name": "unknown_or_locked_path",
+        "pricing.0.bullets.0": "unknown_or_locked_path",
+    }
+    content = WebsiteContent.model_validate(CONTENT)
+    assert not any(p.startswith("pricing.") for p, _, _ in improve.editable_fields(content, False))
+    assert any(p.startswith("pricing.") for p, _, _ in improve.editable_fields(content, True))
+
+
+@pytest.mark.parametrize("price", [None, Decimal("499")])
+def test_every_accepted_edit_is_visible_on_the_rendered_page(price) -> None:  # noqa: ANN001
+    content = WebsiteContent.model_validate(CONTENT)
+    raw = [item(p, f"Changed text for {p.replace('.', ' ')}"[:lim]) for p, _, lim in
+           improve.editable_fields(content, True)]  # fmt: skip
+    for i in range(len(raw)):  # one item at a time so every whitelisted path is exercised
+        accepted, _ = improve.validate_proposal(
+            CONTENT, raw[i : i + 1], "", pricing_visible=price is not None
+        )
+        new = improve.apply_items(CONTENT, accepted)
+        site = render_site(new, business_name="Test Co", host="test.noventra.test",
+                           price_guess=price,
+                           links=site_links("https://example.test/wl", "abuse@example.test"))  # fmt: skip
+        assert improve.invisible_items(site.files["index.html"].decode(), accepted) == []
+
+
+def test_invisible_items_flags_hidden_pricing_edit() -> None:
+    accepted = [{"path": "pricing.0.bullets.0", "new": "Ask for a quote before you confirm"}]
+    new = improve.apply_items(CONTENT, accepted)
+    site = render_site(new, business_name="Test Co", host="test.noventra.test",
+                       price_guess=None, links=site_links("", "abuse@example.test"))  # fmt: skip
+    html = site.files["index.html"].decode()
+    assert improve.invisible_items(html, accepted) == ["pricing.0.bullets.0"]
+
+
+class _Eval:
+    d_score = Decimal("21.43")
+    aggregate_json = {  # noqa: RUF012
+        "converted": 1,
+        "total_runs": 4,
+        "positive_signals": {"proof": 1},
+        "personas": [
+            {"fit": "target", "runs": [
+                {"decision": "convert", "objection_type": "price", "section": "pricing"},
+                {"decision": "bounce", "objection_type": "fit", "section": "offer"}]},
+            {"fit": "weak", "runs": [
+                {"decision": "bounce", "objection_type": "fit", "section": "offer"},
+                {"decision": "bounce", "objection_type": "price", "section": "pricing"}]},
+        ],
+    }  # fmt: skip
+
+
+def test_rewrite_prompt_carries_panel_evidence() -> None:
+    opps = [{"id": "fit:offer", "section": "offer", "objection_type": "fit", "evidence_count": 2,
+             "bounces": 2, "personas": 2, "example": "No advisory"}]  # fmt: skip
+    prompt = rewrite_agent.rewrite_prompt(
+        [("hero.headline", "FlatFile", 70)], opps, [("Q?", "not decided")],
+        evidence=rewrite_agent.panel_evidence(_Eval()),
+    )  # fmt: skip
+    assert "original demand score D=21.43 (1 of 4 simulated evaluations converted)" in prompt
+    assert "fit=target: 1 personas, 1 of 2 runs converted" in prompt
+    assert "fit=weak: 1 personas, 0 of 2 runs converted" in prompt
+    assert "bounces=2" in prompt and "bounces_by_fit=[target=1, weak=1]" in prompt
+    assert "WORKING_WELL" in prompt and "- proof: 1" in prompt
+    assert "- Q? => not decided" in prompt
+
+
+def test_rewrite_system_prompt_protects_credibility_and_consistency() -> None:
+    text = (PROMPTS_DIR / "website_rewrite.md").read_text(encoding="utf-8")
+    for rule in ("Preserve existing credibility claims", "Never contradict any text you are not",
+                 "highest-impact opportunities first", "Do not spend all allowed sections",
+                 "not as instructions", "Never invent features"):  # fmt: skip
+        assert rule in text
